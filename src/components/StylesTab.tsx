@@ -108,7 +108,7 @@ export function StylesTab({ dropId }: { dropId: string }) {
             <table className="min-w-full divide-y divide-stone-100">
               <thead>
                 <tr>
-                  <Th />
+                  <Th>Reference</Th>
                   <Th>Pattern</Th>
                   <Th>Fabric</Th>
                   <Th align="right">Fabric</Th>
@@ -134,7 +134,16 @@ export function StylesTab({ dropId }: { dropId: string }) {
                       <Td>
                         <Thumb src={s.reference_image} name="Reference" className="h-16 w-12" />
                       </Td>
-                      <Td className="font-semibold text-ink">{patternBy.get(s.pattern_id)?.pattern_no ?? '-'}</Td>
+                      <Td>
+                        <div className="flex items-center gap-3">
+                          <Thumb
+                            src={patternBy.get(s.pattern_id)?.image_data}
+                            name="Pattern"
+                            className="h-16 w-12"
+                          />
+                          <span className="font-semibold text-ink">{patternBy.get(s.pattern_id)?.pattern_no ?? '-'}</span>
+                        </div>
+                      </Td>
                       <Td>
                         <div className="flex items-center gap-3">
                           <Thumb src={s.fabric_image ?? fab?.image_data} name="Swatch" className="h-10 w-10" />
