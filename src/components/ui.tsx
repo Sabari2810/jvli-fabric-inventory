@@ -1,4 +1,3 @@
-import { useVisualViewport } from '../lib/useVisualViewport'
 import { useEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -109,35 +108,30 @@ export function Drawer({
     return () => document.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  const { overlay } = useVisualViewport(open)
+  const phone = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
 
-  // On phones the form is a screen of its own: take the page out of the screen while it is open
-  // (nothing is left behind it to show through the iOS keyboard), and put it back where it was.
+  // On phones the form is a screen of its own, an ordinary page in normal flow (nothing fixed,
+  // nothing measured), so Safari handles the keyboard the way it does on any page. The page it was
+  // opened from is taken out while the form is open and put back where it was.
   useEffect(() => {
-    if (!open || !window.matchMedia('(max-width: 767px)').matches) return
+    if (!open || !phone) return
     const root = document.getElementById('root')
     if (!root) return
     const y = window.scrollY
     root.style.display = 'none'
-    const html = document.documentElement
-    const bg = html.style.background
-    html.style.background = '#fff'
     window.scrollTo(0, 0)
     return () => {
-      html.style.background = bg
       root.style.display = ''
       window.scrollTo(0, y)
     }
-  }, [open])
+  }, [open, phone])
 
   if (!open) return null
-  return createPortal(
-    <div className="fixed inset-0 z-50" style={overlay} role="dialog" aria-modal="true" aria-label={title}>
-      <div className="absolute inset-0 animate-fade-in bg-ink/40" onClick={onClose} />
-      {/* Solid layer over the whole screen on phones, so the page cannot show through the translucent iOS keyboard */}
-      <div className="fixed inset-0 -z-10 bg-white md:hidden" aria-hidden="true" />
-      <aside className="absolute inset-0 flex animate-sheet-in flex-col bg-white shadow-2xl md:inset-x-auto md:inset-y-0 md:right-0 md:w-full md:max-w-lg md:animate-drawer-in">
-        <div className="flex shrink-0 items-center justify-between border-b border-stone-200 px-5 py-3 md:px-6 md:py-4">
+
+  if (phone) {
+    return createPortal(
+      <div className="min-h-dvh bg-white" role="dialog" aria-modal="true" aria-label={title}>
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-stone-200 bg-white px-5 py-3">
           <h2 className="font-display text-xl font-semibold text-ink">{title}</h2>
           <button
             type="button"
@@ -148,7 +142,28 @@ export function Drawer({
             <Icon name="close" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto px-5 py-5 pb-8 md:px-6 md:py-6">{children}</div>
+        <div className="px-5 py-5 pb-24">{children}</div>
+      </div>,
+      document.body,
+    )
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="absolute inset-0 animate-fade-in bg-ink/40" onClick={onClose} />
+      <aside className="absolute inset-y-0 right-0 flex w-full max-w-lg animate-drawer-in flex-col bg-white shadow-2xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-stone-200 px-6 py-4">
+          <h2 className="font-display text-xl font-semibold text-ink">{title}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="rounded-lg p-2 text-stone-500 transition hover:bg-stone-100 hover:text-ink"
+          >
+            <Icon name="close" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto px-6 py-6">{children}</div>
       </aside>
     </div>,
     document.body,
