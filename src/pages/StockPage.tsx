@@ -25,6 +25,15 @@ import {
 } from '../components/ui'
 
 type PurposeFilter = 'all' | 'sample' | 'production'
+type SortKey = 'recent' | 'name' | 'left_desc' | 'left_asc'
+
+const sortOptions = [
+  { value: 'recent', label: 'Newest first' },
+  { value: 'name', label: 'Name A to Z' },
+  { value: 'left_desc', label: 'Most left' },
+  { value: 'left_asc', label: 'Least left' },
+]
+
 
 export function StockPage() {
   const { data, isLoading, error } = useStock()
@@ -33,6 +42,9 @@ export function StockPage() {
   const [purpose, setPurpose] = useState<PurposeFilter>('all')
   const [dropId, setDropId] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
+  const [sort, setSort] = useState<SortKey>('recent')
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [draft, setDraft] = useState({ drop: 'all', type: 'all', purpose: 'all' as PurposeFilter })
   const fabricTypes = useFabricTypes()
   const typeName = (id: string | null | undefined) => fabricTypes.data?.find((t) => t.id === id)?.name
   const deleteFabric = useDeleteFabric()
@@ -77,7 +89,7 @@ export function StockPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return rows.filter((r) => {
+    const list = rows.filter((r) => {
       if (purpose !== 'all' && r.purpose !== purpose) return false
       if (typeFilter !== 'all' && (typeFilter === 'none' ? r.fabric_type_id : r.fabric_type_id !== typeFilter)) return false
       if (!q) return true
@@ -85,7 +97,52 @@ export function StockPage() {
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q))
     })
-  }, [rows, search, purpose, typeFilter, fabricTypes.data])
+    if (sort === 'name') list.sort((a, b) => a.fabric_name.localeCompare(b.fabric_name))
+    else if (sort === 'left_desc') list.sort((a, b) => Number(b.meters_left) - Number(a.meters_left))
+    else if (sort === 'left_asc') list.sort((a, b) => Number(a.meters_left) - Number(b.meters_left))
+    else list.sort((a, b) => b.created_at.localeCompare(a.created_at))
+    return list
+  }, [rows, search, purpose, typeFilter, sort, fabricTypes.data])
+
+  const purposeLabel = (p: PurposeFilter) =>
+    p === 'sample' ? 'Bought for samples' : p === 'production' ? 'Bought for production' : 'All purposes'
+  const chips = [
+    dropId !== 'all' ? { key: 'drop', label: dropId === 'none' ? 'No drop' : dropName(dropId) ?? 'Drop', clear: () => setDropId('all') } : null,
+    typeFilter !== 'all' ? { key: 'type', label: typeFilter === 'none' ? 'No type' : typeName(typeFilter) ?? 'Type', clear: () => setTypeFilter('all') } : null,
+    purpose !== 'all' ? { key: 'purpose', label: purposeLabel(purpose), clear: () => setPurpose('all') } : null,
+  ].filter((c): c is { key: string; label: string; clear: () => void } => c !== null)
+
+  function openSheet() {
+    setDraft({ drop: dropId, type: typeFilter, purpose })
+    setSheetOpen(true)
+  }
+  function applySheet() {
+    setDropId(draft.drop)
+    setTypeFilter(draft.type)
+    setPurpose(draft.purpose)
+    setSheetOpen(false)
+  }
+  function clearAll() {
+    setDropId('all')
+    setTypeFilter('all')
+    setPurpose('all')
+  }
+
+  const dropOptions = [
+    { value: 'all', label: 'All drops' },
+    ...(drops.data ?? []).map((d) => ({ value: d.id, label: d.name })),
+    { value: 'none', label: 'No drop' },
+  ]
+  const typeOptions = [
+    { value: 'all', label: 'All fabric types' },
+    ...(fabricTypes.data ?? []).map((t) => ({ value: t.id, label: t.name })),
+    { value: 'none', label: 'No type' },
+  ]
+  const purposeOptions = [
+    { value: 'all', label: 'All purposes' },
+    { value: 'sample', label: 'Bought for samples' },
+    { value: 'production', label: 'Bought for production' },
+  ]
 
   const summary = [
     { label: 'Stock in', value: meters(totals.bought) },
@@ -136,47 +193,121 @@ export function StockPage() {
         </dl>
       </section>
 
-      <div className="mb-6 flex flex-wrap items-center gap-3">
+      {/* Phone: search, a Filters sheet, sort and removable chips */}
+      <div className="mb-5 space-y-3 md:hidden">
         <input
           type="search"
           placeholder="Search fabric, color or supplier"
-          className={`${filterClass} w-full sm:w-72`}
+          className={`${filterClass} w-full`}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <Combobox
-          className="w-48"
-          value={dropId}
-          onChange={setDropId}
-          ariaLabel="Filter by drop"
-          options={[
-            { value: 'all', label: 'All drops' },
-            ...(drops.data ?? []).map((d) => ({ value: d.id, label: d.name })),
-            { value: 'none', label: 'No drop' },
-          ]}
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={openSheet}
+            className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition ${
+              chips.length ? 'bg-maroon-100 text-maroon-900' : 'bg-maroon-50 text-maroon-900'
+            }`}
+          >
+            <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+              <path d="M3 5h14M6 10h8M9 15h2" />
+            </svg>
+            Filters{chips.length ? ` \u00b7 ${chips.length}` : ''}
+          </button>
+          <Combobox value={sort} onChange={(v) => setSort(v as SortKey)} options={sortOptions} ariaLabel="Sort" />
+        </div>
+        {chips.length ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {chips.map((c) => (
+              <button
+                key={c.key}
+                type="button"
+                onClick={c.clear}
+                className="flex items-center gap-1.5 rounded-full bg-maroon-50 px-3 py-1.5 text-xs font-semibold text-maroon-900"
+              >
+                {c.label}
+                <Icon name="close" className="h-3 w-3" />
+              </button>
+            ))}
+            <button type="button" onClick={clearAll} className="ml-auto text-xs font-semibold text-maroon-900">
+              Clear all
+            </button>
+          </div>
+        ) : null}
+        <p className="text-sm font-semibold text-ink">
+          {filtered.length} {filtered.length === 1 ? 'fabric' : 'fabrics'}
+        </p>
+      </div>
+
+      {sheetOpen ? (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <button
+            type="button"
+            aria-label="Close filters"
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setSheetOpen(false)}
+          />
+          <div className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-white px-5 pb-8 pt-3 shadow-2xl">
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-stone-300" />
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="font-display text-xl font-semibold text-ink">Filters</h2>
+              <button
+                type="button"
+                className="text-sm font-semibold text-maroon-900"
+                onClick={() => setDraft({ drop: 'all', type: 'all', purpose: 'all' })}
+              >
+                Clear all
+              </button>
+            </div>
+            <div className="space-y-4">
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-semibold text-ink">Drop</span>
+                <Combobox value={draft.drop} onChange={(v) => setDraft((d) => ({ ...d, drop: v }))} options={dropOptions} ariaLabel="Drop" />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-semibold text-ink">Fabric type</span>
+                <Combobox value={draft.type} onChange={(v) => setDraft((d) => ({ ...d, type: v }))} options={typeOptions} ariaLabel="Fabric type" />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-semibold text-ink">Purpose</span>
+                <Combobox
+                  value={draft.purpose}
+                  onChange={(v) => setDraft((d) => ({ ...d, purpose: v as PurposeFilter }))}
+                  options={purposeOptions}
+                  ariaLabel="Purpose"
+                />
+              </label>
+            </div>
+            <button type="button" className={`${primaryButton} mt-6 w-full justify-center`} onClick={applySheet}>
+              Apply filters
+            </button>
+            <button type="button" className={`${subtleButton} mt-3 w-full justify-center`} onClick={() => setSheetOpen(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Tablet and desktop: inline filters */}
+      <div className="mb-6 hidden flex-wrap items-center gap-3 md:flex">
+        <input
+          type="search"
+          placeholder="Search fabric, color or supplier"
+          className={`${filterClass} w-72`}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
-        <Combobox
-          className="w-48"
-          value={typeFilter}
-          onChange={setTypeFilter}
-          ariaLabel="Filter by fabric type"
-          options={[
-            { value: 'all', label: 'All fabric types' },
-            ...(fabricTypes.data ?? []).map((t) => ({ value: t.id, label: t.name })),
-            { value: 'none', label: 'No type' },
-          ]}
-        />
+        <Combobox className="w-48" value={dropId} onChange={setDropId} ariaLabel="Filter by drop" options={dropOptions} />
+        <Combobox className="w-48" value={typeFilter} onChange={setTypeFilter} ariaLabel="Filter by fabric type" options={typeOptions} />
         <Combobox
           className="w-52"
           value={purpose}
           onChange={(v) => setPurpose(v as PurposeFilter)}
           ariaLabel="Filter by purpose"
-          options={[
-            { value: 'all', label: 'All purposes' },
-            { value: 'sample', label: 'Bought for samples' },
-            { value: 'production', label: 'Bought for production' },
-          ]}
+          options={purposeOptions}
         />
+        <Combobox className="w-44" value={sort} onChange={(v) => setSort(v as SortKey)} ariaLabel="Sort" options={sortOptions} />
       </div>
 
       {isLoading ? <Loading /> : null}
