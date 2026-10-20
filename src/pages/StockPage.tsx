@@ -11,7 +11,7 @@ import {
   PageHeader,
   TapeBar,
   Thumb,
-  inputClass,
+  filterClass,
   linkButton,
   primaryButton,
 } from '../components/ui'
@@ -89,7 +89,7 @@ export function StockPage() {
           <p className="mt-1 font-display text-5xl font-bold tracking-tight tabular-nums">
             {meters(totals.left)}
           </p>
-          <p className="mt-1 text-sm text-maroon-200/80">across {rows.length} fabrics</p>
+          <p className="mt-1 text-sm text-maroon-200/80">across {rows.length} {rows.length === 1 ? 'fabric' : 'fabrics'}</p>
         </div>
         <dl className="grid grid-cols-2 border-t border-white/15 sm:grid-cols-5 lg:border-l lg:border-t-0">
           {summary.map((s, i) => (
@@ -108,12 +108,12 @@ export function StockPage() {
         <input
           type="search"
           placeholder="Search fabric, color or supplier"
-          className={`${inputClass} max-w-xs`}
+          className={`${filterClass} w-full sm:w-72`}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <select
-          className={`${inputClass} w-auto`}
+          className={filterClass}
           value={dropId}
           onChange={(e) => setDropId(e.target.value)}
           aria-label="Filter by drop"
@@ -127,7 +127,7 @@ export function StockPage() {
           <option value="none">No drop</option>
         </select>
         <select
-          className={`${inputClass} w-auto`}
+          className={filterClass}
           value={purpose}
           onChange={(e) => setPurpose(e.target.value as PurposeFilter)}
           aria-label="Filter by purpose"

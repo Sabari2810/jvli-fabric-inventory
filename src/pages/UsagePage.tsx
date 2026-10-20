@@ -22,6 +22,7 @@ import {
   Td,
   Th,
   dangerLink,
+  filterClass,
   inputClass,
   linkButton,
   primaryButton,
@@ -173,7 +174,7 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
       <Card>
         <div className="flex flex-wrap items-center gap-3 border-b border-stone-100 p-4">
           <select
-            className={`${inputClass} w-auto`}
+            className={filterClass}
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value as 'all' | UsageType)}
             aria-label="Filter by type"

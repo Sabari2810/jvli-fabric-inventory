@@ -3,6 +3,9 @@ import { useEffect, type ReactNode } from 'react'
 export const inputClass =
   'block w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-ink placeholder:text-stone-400 transition focus:border-maroon-900 focus:outline-none focus:ring-4 focus:ring-maroon-900/10 disabled:bg-stone-100'
 
+export const filterClass =
+  'rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-ink transition focus:border-maroon-900 focus:outline-none focus:ring-4 focus:ring-maroon-900/10'
+
 export const primaryButton =
   'inline-flex items-center justify-center gap-2 rounded-lg bg-maroon-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-maroon-950 focus:outline-none focus-visible:ring-4 focus-visible:ring-maroon-900/25 disabled:cursor-not-allowed disabled:opacity-60'
 
