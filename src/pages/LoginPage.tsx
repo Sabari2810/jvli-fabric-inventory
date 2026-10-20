@@ -25,7 +25,7 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
-          <p className="text-3xl font-semibold tracking-tight text-rose-900">JVLI</p>
+          <p className="text-3xl font-semibold tracking-tight text-maroon-800">JVLI</p>
           <p className="mt-1 text-sm text-stone-500">Fabric inventory</p>
         </div>
         <form

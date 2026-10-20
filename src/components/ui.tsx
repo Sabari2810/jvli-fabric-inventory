@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 
 export const inputClass =
-  'block w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-stone-400 focus:border-rose-800 focus:outline-none focus:ring-2 focus:ring-rose-800/20 disabled:bg-stone-100'
+  'block w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-stone-400 focus:border-maroon-700 focus:outline-none focus:ring-2 focus:ring-maroon-700/20 disabled:bg-stone-100'
 
 export const primaryButton =
-  'inline-flex items-center justify-center rounded-lg bg-rose-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-rose-800 focus:outline-none focus:ring-2 focus:ring-rose-800/40 disabled:cursor-not-allowed disabled:opacity-60'
+  'inline-flex items-center justify-center rounded-lg bg-maroon-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-maroon-900 focus:outline-none focus:ring-2 focus:ring-maroon-700/40 disabled:cursor-not-allowed disabled:opacity-60'
 
 export const subtleButton =
   'inline-flex items-center justify-center rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium text-stone-700 shadow-sm transition hover:bg-stone-100 focus:outline-none focus:ring-2 focus:ring-stone-400/40 disabled:opacity-60'
@@ -74,11 +74,11 @@ export function ErrorNote({ message }: { message: string | null | undefined }) {
   )
 }
 
-type Tone = 'neutral' | 'rose' | 'green' | 'amber' | 'red' | 'blue'
+type Tone = 'neutral' | 'maroon' | 'green' | 'amber' | 'red' | 'blue'
 
 const toneClass: Record<Tone, string> = {
   neutral: 'bg-stone-100 text-stone-700 ring-stone-200',
-  rose: 'bg-rose-50 text-rose-800 ring-rose-200',
+  maroon: 'bg-maroon-50 text-maroon-700 ring-maroon-200',
   green: 'bg-emerald-50 text-emerald-800 ring-emerald-200',
   amber: 'bg-amber-50 text-amber-800 ring-amber-200',
   red: 'bg-red-50 text-red-800 ring-red-200',
@@ -107,7 +107,7 @@ export function EmptyState({ title, body }: { title: string; body?: string }) {
 export function Loading({ label = 'Loading' }: { label?: string }) {
   return (
     <div className="flex items-center justify-center gap-2 px-6 py-12 text-sm text-stone-500">
-      <span className="h-4 w-4 animate-spin rounded-full border-2 border-stone-300 border-t-rose-800" />
+      <span className="h-4 w-4 animate-spin rounded-full border-2 border-stone-300 border-t-maroon-700" />
       {label}
     </div>
   )

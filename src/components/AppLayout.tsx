@@ -4,7 +4,7 @@ import { Loading, subtleButton } from './ui'
 
 const navLink =
   'rounded-lg px-3 py-2 text-sm font-medium text-stone-600 transition hover:bg-stone-100 hover:text-stone-900'
-const navActive = '!bg-rose-50 !text-rose-900'
+const navActive = '!bg-maroon-50 !text-maroon-800'
 
 export function AppLayout() {
   const { session, loading, signOut } = useAuth()
@@ -24,7 +24,7 @@ export function AppLayout() {
       <header className="border-b border-stone-200 bg-white">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
           <div className="flex items-baseline gap-2">
-            <span className="text-xl font-semibold tracking-tight text-rose-900">JVLI</span>
+            <span className="text-xl font-semibold tracking-tight text-maroon-800">JVLI</span>
             <span className="text-sm text-stone-500">Fabric inventory</span>
           </div>
           <nav className="flex flex-1 items-center gap-1" aria-label="Main">

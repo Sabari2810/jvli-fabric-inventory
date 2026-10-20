@@ -99,7 +99,7 @@ export function StockPage() {
           <label className="flex items-center gap-2 text-sm text-stone-700">
             <input
               type="checkbox"
-              className="h-4 w-4 rounded border-stone-300 text-rose-900 focus:ring-rose-800"
+              className="h-4 w-4 rounded border-stone-300 text-maroon-800 focus:ring-maroon-700"
               checked={lowOnly}
               onChange={(e) => setLowOnly(e.target.checked)}
             />
@@ -159,7 +159,7 @@ export function StockPage() {
                       </Td>
                       <Td className="text-stone-600">{r.supplier || '-'}</Td>
                       <Td>
-                        <Badge tone={r.purpose === 'sample' ? 'blue' : 'rose'}>
+                        <Badge tone={r.purpose === 'sample' ? 'blue' : 'maroon'}>
                           {r.purpose === 'sample' ? 'Sample' : 'Production'}
                         </Badge>
                       </Td>
@@ -181,7 +181,7 @@ export function StockPage() {
                         <Link
                           to="/usage"
                           search={{ lot: r.id }}
-                          className="text-sm font-medium text-rose-900 hover:underline"
+                          className="text-sm font-medium text-maroon-800 hover:underline"
                         >
                           Usage
                         </Link>

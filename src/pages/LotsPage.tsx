@@ -235,7 +235,7 @@ export function LotsPage() {
                     </Td>
                     <Td className="text-stone-600">{l.supplier || '-'}</Td>
                     <Td>
-                      <Badge tone={l.purpose === 'sample' ? 'blue' : 'rose'}>
+                      <Badge tone={l.purpose === 'sample' ? 'blue' : 'maroon'}>
                         {l.purpose === 'sample' ? 'Sample' : 'Production'}
                       </Badge>
                     </Td>
