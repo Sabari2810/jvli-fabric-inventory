@@ -65,7 +65,7 @@ export function StyleDrawer({
     setError(null)
   }, [open, style])
 
-  const patternOptions = (patterns.data ?? []).map((p) => ({ value: p.id, label: p.pattern_no }))
+  const patternOptions = (patterns.data ?? []).map((p) => ({ value: p.id, label: p.pattern_no, image: p.image_data }))
   const typeOptions = (types.data ?? []).map((t) => ({ value: t.id, label: t.name }))
   const fabricOptions = useMemo(
     () =>
@@ -73,6 +73,7 @@ export function StyleDrawer({
         value: x.id,
         label: x.fabric_name,
         hint: x.color ?? undefined,
+        image: x.image_data,
       })),
     [stock.data],
   )

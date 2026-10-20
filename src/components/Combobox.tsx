@@ -5,6 +5,16 @@ export interface Option {
   value: string
   label: string
   hint?: string
+  /** Picture shown beside the label. Pass null for options without one. */
+  image?: string | null
+}
+
+function Pic({ src, className }: { src?: string | null; className: string }) {
+  return src ? (
+    <img src={src} alt="" className={`${className} shrink-0 rounded-md object-cover`} />
+  ) : (
+    <span className={`${className} shrink-0 rounded-md bg-maroon-50`} />
+  )
 }
 
 const triggerBase =
@@ -140,7 +150,10 @@ export function Combobox({
         onClick={() => (open ? setOpen(false) : openList())}
         className={`${triggerBase} ${className}`}
       >
-        <span className={`truncate ${selected ? '' : 'text-stone-400'}`}>{selected ? selected.label : placeholder}</span>
+        <span className={`flex min-w-0 items-center gap-2.5 ${selected ? '' : 'text-stone-400'}`}>
+          {selected && selected.image !== undefined ? <Pic src={selected.image} className="h-9 w-7" /> : null}
+          <span className="truncate">{selected ? selected.label : placeholder}</span>
+        </span>
         <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 text-stone-400" fill="currentColor" aria-hidden="true">
           <path d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" />
         </svg>
@@ -182,7 +195,10 @@ export function Combobox({
                         i === active ? 'bg-maroon-50 text-maroon-900' : 'text-ink'
                       } ${o.value === value ? 'font-semibold' : ''}`}
                     >
-                      <span className="truncate">{o.label}</span>
+                      <span className="flex min-w-0 items-center gap-3">
+                        {o.image !== undefined ? <Pic src={o.image} className="h-12 w-9" /> : null}
+                        <span className="truncate">{o.label}</span>
+                      </span>
                       {o.hint ? <span className="shrink-0 text-xs text-stone-500">{o.hint}</span> : null}
                     </li>
                   ))
