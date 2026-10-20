@@ -50,7 +50,7 @@ export function StockPage() {
       if (purpose !== 'all' && r.purpose !== purpose) return false
       if (lowOnly && Number(r.meters_left) > Number(r.low_stock_meters)) return false
       if (!q) return true
-      return [r.lot_code, r.fabric_name, r.color, r.supplier]
+      return [r.fabric_name, r.color, r.supplier]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q))
     })
@@ -60,7 +60,7 @@ export function StockPage() {
     <>
       <PageHeader
         title="Fabric stock"
-        subtitle="Meters bought, used and left for every lot."
+        subtitle="Meters bought, used and left for every fabric you bought."
         action={
           <Link to="/lots" className={primaryButton}>
             Add fabric purchase
@@ -69,7 +69,7 @@ export function StockPage() {
       />
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-        <Stat label="Bought" value={meters(totals.bought)} sub={`${rows.length} lots`} />
+        <Stat label="Bought" value={meters(totals.bought)} sub={`${rows.length} purchases`} />
         <Stat label="Used for samples" value={meters(totals.sample)} />
         <Stat label="Used for kurtis" value={meters(totals.actual)} />
         <Stat label="Wastage" value={meters(totals.wastage)} />
@@ -81,7 +81,7 @@ export function StockPage() {
         <div className="flex flex-wrap items-center gap-3 border-b border-stone-200 p-4">
           <input
             type="search"
-            placeholder="Search lot, fabric, color or supplier"
+            placeholder="Search fabric, color or supplier"
             className={`${inputClass} max-w-xs`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -93,8 +93,8 @@ export function StockPage() {
             aria-label="Filter by purpose"
           >
             <option value="all">All purposes</option>
-            <option value="sample">Sample lots</option>
-            <option value="production">Production lots</option>
+            <option value="sample">Bought for samples</option>
+            <option value="production">Bought for production</option>
           </select>
           <label className="flex items-center gap-2 text-sm text-stone-700">
             <input
@@ -116,7 +116,7 @@ export function StockPage() {
 
         {!isLoading && !error && filtered.length === 0 ? (
           <EmptyState
-            title={rows.length === 0 ? 'No fabric recorded yet' : 'No lots match these filters'}
+            title={rows.length === 0 ? 'No fabric recorded yet' : 'Nothing matches these filters'}
             body={
               rows.length === 0
                 ? 'Add your first purchase to start tracking meters.'
@@ -131,7 +131,6 @@ export function StockPage() {
               <thead className="bg-stone-50">
                 <tr>
                   <Th />
-                  <Th>Lot</Th>
                   <Th>Fabric</Th>
                   <Th>Supplier</Th>
                   <Th>Purpose</Th>
@@ -158,12 +157,10 @@ export function StockPage() {
                         )}
                       </Td>
                       <Td>
-                        <p className="font-medium text-stone-900">{r.lot_code}</p>
-                        <p className="text-xs text-stone-500">{shortDate(r.purchase_date)}</p>
-                      </Td>
-                      <Td>
                         <p className="text-stone-900">{r.fabric_name}</p>
-                        <p className="text-xs text-stone-500">{r.color || 'No color'}</p>
+                        <p className="text-xs text-stone-500">
+                          {r.color || 'No color'} | {shortDate(r.purchase_date)}
+                        </p>
                       </Td>
                       <Td className="text-stone-600">{r.supplier || '-'}</Td>
                       <Td>

@@ -81,7 +81,7 @@ export function useDeleteLot() {
       const { error } = await supabase.from('fabric_lots').delete().eq('id', id)
       if (error) {
         if (error.code === '23503') {
-          throw new Error('This lot has usage entries. Delete those first.')
+          throw new Error('This fabric has usage entries. Delete those first.')
         }
         throw new Error(error.message)
       }

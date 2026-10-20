@@ -119,7 +119,7 @@ export function LotsPage() {
   }
 
   function onDelete(id: string, code: string) {
-    if (!window.confirm(`Delete ${code}? This cannot be undone.`)) return
+    if (!window.confirm(`Delete the purchase of ${code}? This cannot be undone.`)) return
     deleteLot.mutate(id)
   }
 
@@ -129,7 +129,7 @@ export function LotsPage() {
     <>
       <PageHeader
         title="Fabric purchases"
-        subtitle="Record every lot you buy. Each lot gets its own ID so usage can be traced back to it."
+        subtitle="Record each fabric you buy. Usage is logged against these purchases."
       />
 
       <Card className="mb-8">
@@ -266,7 +266,7 @@ export function LotsPage() {
           </div>
         ) : null}
         {!isLoading && !error && lots.length === 0 ? (
-          <EmptyState title="No purchases yet" body="Your saved lots will show up here." />
+          <EmptyState title="No purchases yet" body="Your saved purchases will show up here." />
         ) : null}
         {lots.length > 0 ? (
           <div className="overflow-x-auto">
@@ -274,7 +274,6 @@ export function LotsPage() {
               <thead className="bg-stone-50">
                 <tr>
                   <Th />
-                  <Th>Lot</Th>
                   <Th>Fabric</Th>
                   <Th>Supplier</Th>
                   <Th>Purpose</Th>
@@ -295,12 +294,10 @@ export function LotsPage() {
                       )}
                     </Td>
                     <Td>
-                      <p className="font-medium text-stone-900">{l.lot_code}</p>
-                      <p className="text-xs text-stone-500">{shortDate(l.purchase_date)}</p>
-                    </Td>
-                    <Td>
                       <p className="text-stone-900">{l.fabric_name}</p>
-                      <p className="text-xs text-stone-500">{l.color || 'No color'}</p>
+                      <p className="text-xs text-stone-500">
+                        {l.color || 'No color'} | {shortDate(l.purchase_date)}
+                      </p>
                     </Td>
                     <Td className="text-stone-600">{l.supplier || '-'}</Td>
                     <Td>
@@ -316,7 +313,7 @@ export function LotsPage() {
                         type="button"
                         className={dangerLink}
                         disabled={deleteLot.isPending}
-                        onClick={() => onDelete(l.id, l.lot_code)}
+                        onClick={() => onDelete(l.id, l.fabric_name)}
                       >
                         Delete
                       </button>

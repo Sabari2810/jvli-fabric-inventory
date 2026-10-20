@@ -90,7 +90,7 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
     if (!Number.isFinite(used) || used <= 0) return setFormError('Meters used must be more than 0.')
     if (wastage < 0) return setFormError('Wastage cannot be negative.')
     if (available !== null && used + wastage > available) {
-      return setFormError(`Only ${plain(available)} m is left in this lot.`)
+      return setFormError(`Only ${plain(available)} m is left of this fabric.`)
     }
 
     try {
@@ -125,9 +125,9 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
         <form onSubmit={onSubmit} className="p-5">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Field
-              label="Fabric lot"
+              label="Fabric"
               className="sm:col-span-2"
-              hint={available !== null ? `${plain(available)} m left in this lot` : undefined}
+              hint={available !== null ? `${plain(available)} m left of this fabric` : undefined}
             >
               <select
                 required
@@ -135,10 +135,10 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
                 value={form.lot_id}
                 onChange={(e) => set('lot_id', e.target.value)}
               >
-                <option value="">Select a lot</option>
+                <option value="">Select a fabric</option>
                 {lots.map((l) => (
                   <option key={l.id} value={l.id}>
-                    {l.lot_code} | {l.fabric_name}
+                    {l.fabric_name}{l.color ? `, ${l.color}` : ''} | bought {shortDate(l.purchase_date)}
                     {l.color ? `, ${l.color}` : ''} | {plain(l.meters_left)} m left
                   </option>
                 ))}
@@ -229,14 +229,14 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
           {lotFilter ? (
             <>
               <Badge tone="maroon">
-                Showing {filteredLot ? filteredLot.lot_code : 'one lot'}
+                Showing {filteredLot ? filteredLot.fabric_name : 'one fabric'}
               </Badge>
               <button
                 type="button"
                 className={subtleButton}
                 onClick={() => navigate({ to: '/usage', search: {} })}
               >
-                Show all lots
+                Show all fabrics
               </button>
             </>
           ) : null}
@@ -266,7 +266,7 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
         ) : null}
         {!usage.isLoading && lots.length === 0 ? (
           <p className="px-6 pb-8 text-center text-sm text-stone-500">
-            You need a fabric lot first.{' '}
+            You need to add a fabric purchase first.{' '}
             <Link to="/lots" className="font-medium text-maroon-900 hover:underline">
               Add a purchase
             </Link>
@@ -279,7 +279,7 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
               <thead className="bg-stone-50">
                 <tr>
                   <Th>Date</Th>
-                  <Th>Lot</Th>
+                  <Th>Fabric</Th>
                   <Th>Design</Th>
                   <Th>Type</Th>
                   <Th align="right">Used</Th>
@@ -293,10 +293,9 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
                   <tr key={u.id} className="hover:bg-stone-50">
                     <Td className="whitespace-nowrap">{shortDate(u.usage_date)}</Td>
                     <Td>
-                      <p className="font-medium text-stone-900">{u.fabric_lots?.lot_code ?? '-'}</p>
+                      <p className="font-medium text-stone-900">{u.fabric_lots?.fabric_name ?? '-'}</p>
                       <p className="text-xs text-stone-500">
-                        {u.fabric_lots?.fabric_name}
-                        {u.fabric_lots?.color ? `, ${u.fabric_lots.color}` : ''}
+                        {u.fabric_lots?.color || 'No color'}
                       </p>
                     </Td>
                     <Td className="text-stone-700">{u.design_code || '-'}</Td>
