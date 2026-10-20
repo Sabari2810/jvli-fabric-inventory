@@ -4,7 +4,7 @@ export const inputClass =
   'block w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-stone-400 focus:border-maroon-700 focus:outline-none focus:ring-2 focus:ring-maroon-700/20 disabled:bg-stone-100'
 
 export const primaryButton =
-  'inline-flex items-center justify-center rounded-lg bg-maroon-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-maroon-900 focus:outline-none focus:ring-2 focus:ring-maroon-700/40 disabled:cursor-not-allowed disabled:opacity-60'
+  'inline-flex items-center justify-center rounded-lg bg-maroon-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-maroon-950 focus:outline-none focus:ring-2 focus:ring-maroon-700/40 disabled:cursor-not-allowed disabled:opacity-60'
 
 export const subtleButton =
   'inline-flex items-center justify-center rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium text-stone-700 shadow-sm transition hover:bg-stone-100 focus:outline-none focus:ring-2 focus:ring-stone-400/40 disabled:opacity-60'

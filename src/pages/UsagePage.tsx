@@ -267,7 +267,7 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
         {!usage.isLoading && lots.length === 0 ? (
           <p className="px-6 pb-8 text-center text-sm text-stone-500">
             You need a fabric lot first.{' '}
-            <Link to="/lots" className="font-medium text-maroon-800 hover:underline">
+            <Link to="/lots" className="font-medium text-maroon-900 hover:underline">
               Add a purchase
             </Link>
           </p>

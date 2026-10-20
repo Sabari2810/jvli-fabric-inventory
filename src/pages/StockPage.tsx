@@ -99,7 +99,7 @@ export function StockPage() {
           <label className="flex items-center gap-2 text-sm text-stone-700">
             <input
               type="checkbox"
-              className="h-4 w-4 rounded border-stone-300 text-maroon-800 focus:ring-maroon-700"
+              className="h-4 w-4 rounded border-stone-300 text-maroon-900 focus:ring-maroon-700"
               checked={lowOnly}
               onChange={(e) => setLowOnly(e.target.checked)}
             />
@@ -181,7 +181,7 @@ export function StockPage() {
                         <Link
                           to="/usage"
                           search={{ lot: r.id }}
-                          className="text-sm font-medium text-maroon-800 hover:underline"
+                          className="text-sm font-medium text-maroon-900 hover:underline"
                         >
                           Usage
                         </Link>
