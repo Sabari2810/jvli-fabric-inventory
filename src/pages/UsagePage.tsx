@@ -1,8 +1,8 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { useAddUsage, useDeleteUsage, useStock, useUsage } from '../lib/queries'
+import { useAddUsage, useDeleteUsage, useStock, useUpdateUsage, useUsage } from '../lib/queries'
 import { meters, plain, rupees, shortDate, todayISO } from '../lib/format'
-import type { UsageType } from '../lib/types'
+import type { FabricUsage, UsageType } from '../lib/types'
 import {
   Badge,
   Card,
@@ -45,6 +45,8 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
   const usage = useUsage()
   const addUsage = useAddUsage()
   const deleteUsage = useDeleteUsage()
+  const updateUsage = useUpdateUsage()
+  const [editing, setEditing] = useState<FabricUsage | null>(null)
 
   const [form, setForm] = useState<FormState>(() => emptyForm(lotFilter ?? ''))
   const [formError, setFormError] = useState<string | null>(null)
@@ -52,7 +54,12 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
 
   const lots = stock.data ?? []
   const selectedLot = lots.find((l) => l.id === form.lot_id)
-  const available = selectedLot ? Number(selectedLot.meters_left) : null
+  // When editing, the entry's own meters are given back before checking what is left.
+  const addBack =
+    editing && editing.lot_id === form.lot_id
+      ? Number(editing.meters_used) + Number(editing.wastage_meters)
+      : 0
+  const available = selectedLot ? Number(selectedLot.meters_left) + addBack : null
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((f) => ({ ...f, [key]: value }))
@@ -94,7 +101,7 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
     }
 
     try {
-      await addUsage.mutateAsync({
+      const payload = {
         lot_id: form.lot_id,
         usage_date: form.usage_date,
         design_code: form.design_code.trim() || null,
@@ -102,11 +109,35 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
         meters_used: used,
         wastage_meters: wastage,
         notes: form.notes.trim() || null,
-      })
+      }
+      if (editing) await updateUsage.mutateAsync({ id: editing.id, patch: payload })
+      else await addUsage.mutateAsync(payload)
+      setEditing(null)
       setForm((f) => ({ ...emptyForm(f.lot_id), usage_date: f.usage_date, usage_type: f.usage_type }))
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Could not save the usage entry.')
     }
+  }
+
+  function startEdit(u: FabricUsage) {
+    setEditing(u)
+    setFormError(null)
+    setForm({
+      lot_id: u.lot_id,
+      usage_date: u.usage_date,
+      design_code: u.design_code ?? '',
+      usage_type: u.usage_type,
+      meters_used: String(u.meters_used),
+      wastage_meters: String(u.wastage_meters),
+      notes: u.notes ?? '',
+    })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function cancelEdit() {
+    setEditing(null)
+    setForm(emptyForm(lotFilter ?? ''))
+    setFormError(null)
   }
 
   function onDelete(id: string) {
@@ -204,9 +235,18 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
             </Field>
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <button type="submit" disabled={addUsage.isPending} className={primaryButton}>
-              {addUsage.isPending ? 'Saving' : 'Log usage'}
+            <button
+              type="submit"
+              disabled={addUsage.isPending || updateUsage.isPending}
+              className={primaryButton}
+            >
+              {addUsage.isPending || updateUsage.isPending ? 'Saving' : editing ? 'Update entry' : 'Log usage'}
             </button>
+            {editing ? (
+              <button type="button" className={subtleButton} onClick={cancelEdit}>
+                Cancel
+              </button>
+            ) : null}
             <div className="min-w-0 flex-1">
               <ErrorNote message={formError} />
             </div>
@@ -309,7 +349,14 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
                     <Td align="right">
                       {rupees(Number(u.meters_used) * Number(u.fabric_lots?.rate_per_meter ?? 0))}
                     </Td>
-                    <Td align="right">
+                    <Td align="right" className="whitespace-nowrap">
+                      <button
+                        type="button"
+                        className="mr-4 text-sm font-medium text-maroon-900 hover:underline"
+                        onClick={() => startEdit(u)}
+                      >
+                        Edit
+                      </button>
                       <button
                         type="button"
                         className={dangerLink}

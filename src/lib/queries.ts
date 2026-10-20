@@ -104,6 +104,28 @@ export function useAddLot() {
   })
 }
 
+export function useUpdateLot() {
+  const refresh = useRefreshAll()
+  return useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: NewLot }) => {
+      const { error } = await supabase.from('fabric_lots').update(patch).eq('id', id)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: refresh,
+  })
+}
+
+export function useUpdateUsage() {
+  const refresh = useRefreshAll()
+  return useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: NewUsage }) => {
+      const { error } = await supabase.from('fabric_usage').update(patch).eq('id', id)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: refresh,
+  })
+}
+
 export function useSetLotDrop() {
   const refresh = useRefreshAll()
   return useMutation({

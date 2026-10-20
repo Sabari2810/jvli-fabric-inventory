@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
-import { useAddDrop, useAddLot, useDeleteLot, useDrops, useLots, useSetLotDrop } from '../lib/queries'
+import { useAddDrop, useAddLot, useDeleteLot, useDrops, useLots, useSetLotDrop, useUpdateLot } from '../lib/queries'
 import { meters, rupees, shortDate, todayISO } from '../lib/format'
 import { fileToWebpDataUrl } from '../lib/image'
-import type { Purpose } from '../lib/types'
+import type { FabricLot, Purpose } from '../lib/types'
 import {
   Badge,
   Card,
@@ -51,6 +51,8 @@ export function LotsPage() {
   const drops = useDrops()
   const addDrop = useAddDrop()
   const setLotDrop = useSetLotDrop()
+  const updateLot = useUpdateLot()
+  const [editingId, setEditingId] = useState<string | null>(null)
   const deleteLot = useDeleteLot()
   const [form, setForm] = useState<FormState>(emptyForm)
   const [formError, setFormError] = useState<string | null>(null)
@@ -96,6 +98,32 @@ export function LotsPage() {
     return () => document.removeEventListener('paste', onPaste)
   }, [])
 
+  function startEdit(l: FabricLot) {
+    setEditingId(l.id)
+    setFormError(null)
+    setImage(l.image_data ?? null)
+    setForm({
+      purchase_date: l.purchase_date,
+      supplier: l.supplier ?? '',
+      fabric_name: l.fabric_name,
+      color: l.color ?? '',
+      meters_bought: String(l.meters_bought),
+      rate_per_meter: String(l.rate_per_meter),
+      purpose: l.purpose,
+      low_stock_meters: String(l.low_stock_meters),
+      notes: l.notes ?? '',
+      drop_id: l.drop_id ?? '',
+    })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+    setForm(emptyForm())
+    setImage(null)
+    setFormError(null)
+  }
+
   async function onNewDrop() {
     const name = window.prompt('Name of the new drop (for example, October Drop)')?.trim()
     if (!name) return
@@ -117,7 +145,7 @@ export function LotsPage() {
     if (!Number.isFinite(bought) || bought <= 0) return setFormError('Meters bought must be more than 0.')
 
     try {
-      await addLot.mutateAsync({
+      const payload = {
         purchase_date: form.purchase_date,
         supplier: form.supplier.trim() || null,
         fabric_name: form.fabric_name.trim(),
@@ -129,7 +157,10 @@ export function LotsPage() {
         notes: form.notes.trim() || null,
         image_data: image,
         drop_id: form.drop_id || null,
-      })
+      }
+      if (editingId) await updateLot.mutateAsync({ id: editingId, patch: payload })
+      else await addLot.mutateAsync(payload)
+      setEditingId(null)
       setForm(emptyForm())
       setImage(null)
     } catch (err) {
@@ -281,9 +312,14 @@ export function LotsPage() {
             </Field>
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <button type="submit" disabled={addLot.isPending || converting} className={primaryButton}>
-              {addLot.isPending ? 'Saving' : 'Save purchase'}
+            <button type="submit" disabled={addLot.isPending || updateLot.isPending || converting} className={primaryButton}>
+              {addLot.isPending || updateLot.isPending ? 'Saving' : editingId ? 'Update purchase' : 'Save purchase'}
             </button>
+            {editingId ? (
+              <button type="button" className={subtleButton} onClick={cancelEdit}>
+                Cancel
+              </button>
+            ) : null}
             <div className="min-w-0 flex-1">
               <ErrorNote message={formError} />
             </div>
@@ -363,7 +399,14 @@ export function LotsPage() {
                     <Td align="right">{meters(l.meters_bought)}</Td>
                     <Td align="right">{rupees(l.rate_per_meter)}</Td>
                     <Td align="right">{rupees(Number(l.meters_bought) * Number(l.rate_per_meter))}</Td>
-                    <Td align="right">
+                    <Td align="right" className="whitespace-nowrap">
+                      <button
+                        type="button"
+                        className="mr-4 text-sm font-medium text-maroon-900 hover:underline"
+                        onClick={() => startEdit(l)}
+                      >
+                        Edit
+                      </button>
                       <button
                         type="button"
                         className={dangerLink}
