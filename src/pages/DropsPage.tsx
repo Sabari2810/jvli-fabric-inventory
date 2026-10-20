@@ -101,16 +101,74 @@ export function DropsPage() {
         }
       />
 
-      <Card>
+      {deleteDrop.error ? (
+        <div className="mb-4">
+          <ErrorNote message={deleteDrop.error.message} />
+        </div>
+      ) : null}
+
+      {rows.length > 0 ? (
+        <ul className="space-y-3 md:hidden">
+          {rows.map((d) => {
+            const t = totals.get(d.id) ?? { fabrics: 0, bought: 0, out: 0, left: 0, value: 0 }
+            return (
+              <li key={d.id} className="rounded-2xl border border-stone-200/80 bg-white p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <Link
+                      to="/drops/$dropId"
+                      params={{ dropId: d.id }}
+                      className="block font-display text-lg font-semibold leading-snug text-ink hover:text-maroon-900"
+                    >
+                      {d.name}
+                    </Link>
+                    <p className="mt-0.5 text-xs text-stone-500">
+                      {t.fabrics} {t.fabrics === 1 ? 'fabric' : 'fabrics'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-stone-500">Stock value</p>
+                    <p className="whitespace-nowrap font-display text-lg font-semibold tabular-nums text-ink">
+                      {rupees(t.value)}
+                    </p>
+                  </div>
+                </div>
+                <dl className="mt-4 grid grid-cols-3 gap-px overflow-hidden rounded-xl bg-stone-200/80 text-center">
+                  <div className="bg-stone-50 py-2.5">
+                    <dt className="text-xs text-stone-500">Stock in</dt>
+                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums">{meters(t.bought)}</dd>
+                  </div>
+                  <div className="bg-stone-50 py-2.5">
+                    <dt className="text-xs text-stone-500">Stock out</dt>
+                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums">{meters(t.out)}</dd>
+                  </div>
+                  <div className="bg-maroon-50 py-2.5">
+                    <dt className="text-xs text-maroon-900/70">Left</dt>
+                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums text-maroon-900">{meters(t.left)}</dd>
+                  </div>
+                </dl>
+                <div className="mt-3 flex items-center justify-between">
+                  <Link to="/drops/$dropId" params={{ dropId: d.id }} className={linkButton}>
+                    View
+                  </Link>
+                  {canEdit ? (
+                    <div className="flex">
+                      <IconButton icon="edit" label="Rename drop" onClick={() => startRename(d)} />
+                      <IconButton icon="trash" label="Delete drop" danger onClick={() => onDelete(d)} />
+                    </div>
+                  ) : null}
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      ) : null}
+
+      <Card className={rows.length > 0 ? 'hidden md:block' : ''}>
         {drops.isLoading || stock.isLoading ? <Loading /> : null}
         {drops.error ? (
           <div className="p-4">
             <ErrorNote message={drops.error.message} />
-          </div>
-        ) : null}
-        {deleteDrop.error ? (
-          <div className="p-4">
-            <ErrorNote message={deleteDrop.error.message} />
           </div>
         ) : null}
         {!drops.isLoading && !drops.error && rows.length === 0 ? (
