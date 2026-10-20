@@ -203,6 +203,16 @@ export function StockPage() {
             </svg>
             Filters{chips.length ? ` \u00b7 ${chips.length}` : ''}
           </button>
+          {canEdit ? (
+            <button
+              type="button"
+              aria-label="Add fabric"
+              onClick={() => openFabric(null)}
+              className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-lg bg-maroon-900 text-white transition hover:bg-maroon-800"
+            >
+              <Icon name="plus" className="h-5 w-5" />
+            </button>
+          ) : null}
         </div>
       </div>
       <div className="mb-5 space-y-3 md:hidden">
