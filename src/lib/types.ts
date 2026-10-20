@@ -137,6 +137,7 @@ export interface DropStyle {
   gst: number
   shipping: number
   planned_qty: number | null
+  final_price: number | null
   notes: string | null
   created_at: string
 }

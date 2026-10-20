@@ -37,6 +37,7 @@ export function StyleDrawer({
   const [reference, setReference] = useState<string | null>(null)
   const [f, setF] = useState<Record<string, string>>({})
   const [planned, setPlanned] = useState('')
+  const [finalPrice, setFinalPrice] = useState('')
   const [notes, setNotes] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -61,6 +62,7 @@ export function StyleDrawer({
       shipping: show(style?.shipping),
     })
     setPlanned(show(style?.planned_qty))
+    setFinalPrice(show(style?.final_price))
     setNotes(style?.notes ?? '')
     setError(null)
   }, [open, style])
@@ -141,6 +143,7 @@ export function StyleDrawer({
           gst: money('gst'),
           shipping: money('shipping'),
           planned_qty: planned ? Number(planned) : null,
+          final_price: finalPrice ? Number(finalPrice) : null,
           notes: notes.trim() || null,
         },
       })
@@ -223,11 +226,24 @@ export function StyleDrawer({
             <dt className="text-xs text-stone-500">Raw material</dt>
             <dd className="mt-0.5 whitespace-nowrap font-display text-lg font-semibold tabular-nums">{rupees(calc.raw)}</dd>
           </div>
-          <div className="bg-maroon-50 p-4">
-            <dt className="text-xs text-maroon-900/70">MRP</dt>
-            <dd className="mt-0.5 whitespace-nowrap font-display text-lg font-semibold tabular-nums text-maroon-900">{rupees(calc.mrp)}</dd>
+          <div className="bg-stone-50 p-4">
+            <dt className="text-xs text-stone-500">Calculated price</dt>
+            <dd className="mt-0.5 whitespace-nowrap font-display text-lg font-semibold tabular-nums">{rupees(calc.mrp)}</dd>
           </div>
         </dl>
+
+        <Field label="Final price" hint="The price you will actually sell at. Leave empty to use the calculated price.">
+          <input
+            type="number"
+            inputMode="decimal"
+            step="1"
+            min="0"
+            placeholder={String(Math.round(calc.mrp))}
+            className={inputClass}
+            value={finalPrice}
+            onChange={(e) => setFinalPrice(e.target.value)}
+          />
+        </Field>
 
         <ErrorNote message={error} />
         <div className="flex gap-3 border-t border-stone-100 pt-5">

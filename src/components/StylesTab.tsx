@@ -38,7 +38,7 @@ export function StylesTab({ dropId }: { dropId: string }) {
     let pieces = 0
     let needed = 0
     for (const s of rows) {
-      mrp += costing(s).mrp
+      mrp += s.final_price ?? costing(s).mrp
       pieces += s.planned_qty ?? 0
       needed += (s.planned_qty ?? 0) * Number(s.fabric_usage_m)
     }
@@ -60,7 +60,7 @@ export function StylesTab({ dropId }: { dropId: string }) {
 
   const figures = [
     { label: 'Styles', value: String(rows.length) },
-    { label: 'Average MRP', value: rupees(totals.avg) },
+    { label: 'Average price', value: rupees(totals.avg) },
     { label: 'Planned pieces', value: String(totals.pieces) },
     { label: 'Fabric needed', value: meters(totals.needed) },
   ]
@@ -118,7 +118,8 @@ export function StylesTab({ dropId }: { dropId: string }) {
                   <Th align="right">Profit</Th>
                   <Th align="right">GST</Th>
                   <Th align="right">Shipping</Th>
-                  <Th align="right">MRP</Th>
+                  <Th align="right">Calculated</Th>
+                  <Th align="right">Final price</Th>
                   <Th align="right">Planned</Th>
                   <Th />
                 </tr>
@@ -180,8 +181,11 @@ export function StylesTab({ dropId }: { dropId: string }) {
                       <Td align="right">{rupees(s.profit)}</Td>
                       <Td align="right">{rupees(s.gst)}</Td>
                       <Td align="right">{rupees(s.shipping)}</Td>
-                      <Td align="right" className="font-semibold text-maroon-900">
+                      <Td align="right" className="text-stone-600">
                         {rupees(c.mrp)}
+                      </Td>
+                      <Td align="right" className="font-semibold text-maroon-900">
+                        {s.final_price !== null ? rupees(s.final_price) : '-'}
                       </Td>
                       <Td align="right">{s.planned_qty ?? '-'}</Td>
                       <Td align="right" className="whitespace-nowrap">
