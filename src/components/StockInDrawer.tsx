@@ -165,7 +165,7 @@ export function StockInDrawer({
           />
         </Field>
         <ErrorNote message={error} />
-        <div className="flex gap-3 border-t border-stone-100 pt-5">
+        <div className="sticky bottom-0 z-10 -mx-5 flex gap-3 border-t border-stone-100 bg-white px-5 pb-4 pt-4 md:static md:mx-0 md:px-0 md:pb-0 md:pt-5">
           <button type="submit" disabled={saving} className={primaryButton}>
             {saving ? 'Saving' : entry ? 'Save changes' : 'Add stock in'}
           </button>

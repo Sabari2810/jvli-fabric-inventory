@@ -84,7 +84,7 @@ export function PhotoField({
             ) : null}
           </div>
           <p className="mt-2 text-xs text-stone-500">
-            {converting ? 'Converting to WebP' : 'Or paste an image with Ctrl+V (Cmd+V on Mac).'}
+            {converting ? 'Converting to WebP' : <><span className="md:hidden">Take or choose a photo.</span><span className="hidden md:inline">Or paste an image with Ctrl+V (Cmd+V on Mac).</span></>}
           </p>
         </div>
       </div>
