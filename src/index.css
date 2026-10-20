@@ -72,3 +72,12 @@ input:disabled {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* iOS Safari zooms the page when a field under 16px gets focus, and never zooms back out */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
