@@ -110,7 +110,7 @@ export function StylesTab({ dropId }: { dropId: string }) {
                 <tr>
                   <Th>Reference</Th>
                   <Th>Pattern</Th>
-                  <Th>Fabric</Th>
+                  <Th className="sticky left-0 z-10 bg-white shadow-[1px_0_0_0_#e7e5e4]">Fabric</Th>
                   <Th align="right">Fabric</Th>
                   <Th align="right">Lining</Th>
                   <Th align="right">Raw material</Th>
@@ -130,7 +130,7 @@ export function StylesTab({ dropId }: { dropId: string }) {
                   const fab = s.fabric_id ? fabricBy.get(s.fabric_id) : undefined
                   const type = s.fabric_type_id ? typeBy.get(s.fabric_type_id) : undefined
                   return (
-                    <tr key={s.id} className="transition hover:bg-stone-50/70">
+                    <tr key={s.id} className="group transition hover:bg-stone-50/70">
                       <Td>
                         <Thumb src={s.reference_image} name="Reference" className="h-16 w-12" />
                       </Td>
@@ -144,7 +144,7 @@ export function StylesTab({ dropId }: { dropId: string }) {
                           <span className="font-semibold text-ink">{patternBy.get(s.pattern_id)?.pattern_no ?? '-'}</span>
                         </div>
                       </Td>
-                      <Td>
+                      <Td className="sticky left-0 z-10 w-72 min-w-72 bg-white shadow-[1px_0_0_0_#e7e5e4] group-hover:bg-stone-50">
                         <div className="flex items-center gap-3">
                           <Thumb src={s.fabric_image ?? fab?.image_data} name="Swatch" className="h-10 w-10" />
                           <div className="min-w-0">

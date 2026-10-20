@@ -208,16 +208,18 @@ export function Loading({ label = 'Loading' }: { label?: string }) {
 export function Th({
   children,
   align = 'left',
+  className = '',
 }: {
   children?: ReactNode
   align?: 'left' | 'right'
+  className?: string
 }) {
   return (
     <th
       scope="col"
       className={`whitespace-nowrap px-4 py-3 text-xs font-semibold text-stone-500 ${
         align === 'right' ? 'text-right' : 'text-left'
-      }`}
+      } ${className}`}
     >
       {children}
     </th>
