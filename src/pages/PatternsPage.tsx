@@ -115,7 +115,11 @@ export function PatternsPage() {
       {rows.length > 0 ? (
         <ul className="grid grid-cols-1 gap-3 md:hidden">
           {rows.map((p) => (
-            <li key={p.id} className="flex gap-4 rounded-2xl border border-stone-200/80 bg-white p-4">
+            <li
+              key={p.id}
+              onClick={canEdit ? () => openForm(p) : undefined}
+              className={`flex gap-4 rounded-2xl border border-stone-200/80 bg-white p-4 ${canEdit ? 'cursor-pointer active:bg-stone-50' : ''}`}
+            >
               <Thumb src={p.image_data} name={p.pattern_no} className="h-28 w-20" />
               <div className="flex min-w-0 flex-1 flex-col">
                 <div className="flex items-start justify-between gap-2">
@@ -126,7 +130,7 @@ export function PatternsPage() {
                     </p>
                   </div>
                   {canEdit ? (
-                    <div className="flex shrink-0">
+                    <div className="flex shrink-0" onClick={(e) => e.stopPropagation()}>
                       <IconButton icon="edit" label="Edit pattern" onClick={() => openForm(p)} />
                       <IconButton icon="trash" label="Delete pattern" danger onClick={() => onDelete(p)} />
                     </div>
