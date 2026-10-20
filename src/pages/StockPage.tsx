@@ -182,7 +182,7 @@ export function StockPage() {
       </section>
 
       {/* Phone: search with a Filters button, and removable chips */}
-      <div className="mb-5 space-y-3 md:hidden">
+      <div className="sticky top-[52px] z-20 -mx-4 mb-2 bg-mist px-4 py-3 md:hidden">
         <div className="flex gap-3">
           <input
             type="search"
@@ -204,6 +204,8 @@ export function StockPage() {
             Filters{chips.length ? ` \u00b7 ${chips.length}` : ''}
           </button>
         </div>
+      </div>
+      <div className="mb-5 space-y-3 md:hidden">
         {chips.length ? (
           <div className="flex flex-wrap items-center gap-2">
             {chips.map((c) => (
