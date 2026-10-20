@@ -5,7 +5,6 @@ import {
   useDeleteStyle,
   useDropStyles,
   useFabricTypes,
-  useImportNovStyles,
   usePatterns,
   useStock,
 } from '../lib/queries'
@@ -13,7 +12,7 @@ import { costing } from '../lib/costing'
 import { meters, rupees } from '../lib/format'
 import type { DropStyle } from '../lib/types'
 import { StyleDrawer } from './StyleDrawer'
-import { Card, EmptyState, ErrorNote, Icon, IconButton, Loading, Td, Th, Thumb, primaryButton, subtleButton } from './ui'
+import { Card, EmptyState, ErrorNote, Icon, IconButton, Loading, Td, Th, Thumb, primaryButton } from './ui'
 
 export function StylesTab({ dropId }: { dropId: string }) {
   const styles = useDropStyles()
@@ -21,7 +20,6 @@ export function StylesTab({ dropId }: { dropId: string }) {
   const types = useFabricTypes()
   const stock = useStock()
   const del = useDeleteStyle()
-  const importer = useImportNovStyles()
   const canEdit = useCanEdit()
 
   const [open, setOpen] = useState(false)
@@ -57,10 +55,6 @@ export function StylesTab({ dropId }: { dropId: string }) {
     del.mutate(s.id)
   }
 
-  function runImport() {
-    importer.mutate({ dropId, fabrics: (stock.data ?? []).map((f) => ({ id: f.id, image_data: f.image_data })) })
-  }
-
   if (styles.isLoading || patterns.isLoading) return <Loading />
   if (styles.error) return <ErrorNote message={styles.error.message} />
 
@@ -73,13 +67,6 @@ export function StylesTab({ dropId }: { dropId: string }) {
 
   return (
     <>
-      {importer.data ? (
-        <p className="mb-4 rounded-lg bg-maroon-50 px-4 py-3 text-sm text-maroon-900">
-          Imported {importer.data.count} styles. {importer.data.linked} matched a fabric you already have by its picture.
-          Check the fabric link on each style and change it if a match is wrong.
-        </p>
-      ) : null}
-      {importer.error ? <ErrorNote message={importer.error.message} /> : null}
       {del.error ? <ErrorNote message={del.error.message} /> : null}
 
       <div className="mb-3 flex items-center justify-between gap-3">
@@ -107,17 +94,12 @@ export function StylesTab({ dropId }: { dropId: string }) {
         {rows.length === 0 ? (
           <EmptyState
             title="No styles in this drop yet"
-            body="Add a style per pattern with its fabric, lining and costing. For the November drop you can bring in the whole sheet at once."
+            body="Add a style per pattern with its fabric, lining and costing."
             action={
               canEdit ? (
-                <div className="flex flex-wrap justify-center gap-3">
-                  <button type="button" className={primaryButton} onClick={() => openForm(null)}>
-                    Add style
-                  </button>
-                  <button type="button" className={subtleButton} disabled={importer.isPending} onClick={runImport}>
-                    {importer.isPending ? 'Importing' : 'Import November sheet'}
-                  </button>
-                </div>
+                <button type="button" className={primaryButton} onClick={() => openForm(null)}>
+                  Add style
+                </button>
               ) : undefined
             }
           />
