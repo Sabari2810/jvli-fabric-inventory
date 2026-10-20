@@ -137,7 +137,7 @@ export function Drawer({
 
   if (phone) {
     return createPortal(
-      <div className="min-h-dvh bg-white" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="bg-white" role="dialog" aria-modal="true" aria-label={title}>
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-stone-200 bg-white px-5 py-3">
           <h2 className="font-display text-xl font-semibold text-ink">{title}</h2>
           <button
@@ -149,7 +149,7 @@ export function Drawer({
             <Icon name="close" />
           </button>
         </div>
-        <div className="px-5 py-5 pb-24">{children}</div>
+        <div className="px-5 pt-5">{children}</div>
       </div>,
       document.body,
     )

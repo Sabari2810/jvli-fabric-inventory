@@ -263,7 +263,7 @@ export function PatternsPage() {
             <input className={inputClass} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </Field>
           <ErrorNote message={error} />
-          <div className="sticky bottom-0 z-10 -mx-5 flex gap-3 border-t border-stone-100 bg-white px-5 pb-4 pt-4 md:static md:mx-0 md:px-0 md:pb-0 md:pt-5">
+          <div className="sticky bottom-0 z-10 -mx-5 flex gap-3 border-t border-stone-100 bg-white px-5 pb-5 pt-4 md:static md:mx-0 md:px-0 md:pb-0 md:pt-5">
             <button type="submit" disabled={save.isPending || busy} className={primaryButton}>
               {save.isPending ? 'Saving' : editing ? 'Save changes' : 'Add pattern'}
             </button>
