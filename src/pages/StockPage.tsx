@@ -171,22 +171,23 @@ export function StockPage() {
         }
       />
 
-      <section className="mb-8 grid overflow-hidden rounded-2xl bg-maroon-900 text-white lg:grid-cols-[minmax(0,15rem)_1fr]">
-        <div className="p-6 lg:p-8">
-          <p className="text-sm text-maroon-200/80">Left on the shelf</p>
-          <p className="mt-1 font-display text-5xl font-bold tracking-tight tabular-nums">
+      <section className="mb-6 grid overflow-hidden rounded-2xl bg-maroon-900 text-white sm:mb-8 lg:grid-cols-[minmax(0,15rem)_1fr]">
+        <div className="flex items-baseline justify-between gap-3 p-4 sm:block sm:p-6 lg:p-8">
+          <p className="text-sm text-maroon-200/80 sm:hidden">Left on the shelf</p>
+          <p className="hidden text-sm text-maroon-200/80 sm:block">Left on the shelf</p>
+          <p className="font-display text-3xl font-bold tracking-tight tabular-nums sm:mt-1 sm:text-5xl">
             {meters(totals.left)}
           </p>
-          <p className="mt-1 text-sm text-maroon-200/80">across {rows.length} {rows.length === 1 ? 'fabric' : 'fabrics'}</p>
+          <p className="hidden text-sm text-maroon-200/80 sm:mt-1 sm:block">across {rows.length} {rows.length === 1 ? 'fabric' : 'fabrics'}</p>
         </div>
-        <dl className="grid grid-cols-2 border-t border-white/15 sm:grid-cols-5 lg:border-l lg:border-t-0">
+        <dl className="grid grid-cols-3 border-t border-white/15 sm:grid-cols-5 lg:border-l lg:border-t-0">
           {summary.map((s, i) => (
             <div
               key={s.label}
-              className={`p-5 lg:p-6 ${i > 0 ? 'sm:border-l sm:border-white/15' : ''}`}
+              className={`p-3 sm:p-5 lg:p-6 ${i > 0 ? 'sm:border-l sm:border-white/15' : ''}`}
             >
-              <dt className="text-sm text-maroon-200/80">{s.label}</dt>
-              <dd className="mt-1 font-display text-xl font-semibold tabular-nums">{s.value}</dd>
+              <dt className="text-xs text-maroon-200/80 sm:text-sm">{s.label}</dt>
+              <dd className="mt-0.5 whitespace-nowrap font-display text-base font-semibold tabular-nums sm:mt-1 sm:text-xl">{s.value}</dd>
             </div>
           ))}
         </dl>
