@@ -21,6 +21,7 @@ create table if not exists public.fabric_lots (
   purpose           text not null check (purpose in ('sample', 'production')),
   low_stock_meters  numeric(10,2) not null default 5 check (low_stock_meters >= 0),
   notes             text,
+  image_data        text check (image_data is null or (image_data like 'data:image/webp;base64,%' and length(image_data) <= 1500000)),
   created_by        uuid default auth.uid(),
   created_at        timestamptz not null default now()
 );

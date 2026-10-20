@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useAddLot, useDeleteLot, useLots } from '../lib/queries'
 import { meters, rupees, shortDate, todayISO } from '../lib/format'
+import { fileToWebpDataUrl } from '../lib/image'
 import type { Purpose } from '../lib/types'
 import {
   Badge,
@@ -47,9 +48,28 @@ export function LotsPage() {
   const deleteLot = useDeleteLot()
   const [form, setForm] = useState<FormState>(emptyForm)
   const [formError, setFormError] = useState<string | null>(null)
+  const [image, setImage] = useState<string | null>(null)
+  const [converting, setConverting] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((f) => ({ ...f, [key]: value }))
+
+  async function onPickImage(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setFormError(null)
+    setConverting(true)
+    try {
+      setImage(await fileToWebpDataUrl(file))
+    } catch (err) {
+      setImage(null)
+      setFormError(err instanceof Error ? err.message : 'Could not read that image.')
+    } finally {
+      setConverting(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -70,8 +90,10 @@ export function LotsPage() {
         purpose: form.purpose,
         low_stock_meters: Number(form.low_stock_meters) || 0,
         notes: form.notes.trim() || null,
+        image_data: image,
       })
       setForm(emptyForm())
+      setImage(null)
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Could not save the purchase.')
     }
@@ -172,6 +194,26 @@ export function LotsPage() {
                 onChange={(e) => set('low_stock_meters', e.target.value)}
               />
             </Field>
+            <Field label="Fabric photo" hint="Converted to WebP before saving" className="sm:col-span-2 lg:col-span-4">
+              <div className="flex items-center gap-4">
+                {image ? (
+                  <img src={image} alt="Fabric preview" className="h-16 w-16 rounded-lg border border-stone-200 object-cover" />
+                ) : null}
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={onPickImage}
+                  className="block w-full text-sm text-stone-600 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-maroon-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-maroon-900 hover:file:bg-maroon-100"
+                />
+                {image ? (
+                  <button type="button" className={dangerLink} onClick={() => setImage(null)}>
+                    Remove
+                  </button>
+                ) : null}
+              </div>
+              {converting ? <span className="mt-1 block text-xs text-stone-500">Converting</span> : null}
+            </Field>
             <Field label="Notes" className="sm:col-span-2 lg:col-span-4">
               <input
                 placeholder="Bill number, quality remarks"
@@ -182,7 +224,7 @@ export function LotsPage() {
             </Field>
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <button type="submit" disabled={addLot.isPending} className={primaryButton}>
+            <button type="submit" disabled={addLot.isPending || converting} className={primaryButton}>
               {addLot.isPending ? 'Saving' : 'Save purchase'}
             </button>
             <div className="min-w-0 flex-1">
@@ -212,6 +254,7 @@ export function LotsPage() {
             <table className="min-w-full divide-y divide-stone-200">
               <thead className="bg-stone-50">
                 <tr>
+                  <Th />
                   <Th>Lot</Th>
                   <Th>Fabric</Th>
                   <Th>Supplier</Th>
@@ -225,6 +268,13 @@ export function LotsPage() {
               <tbody className="divide-y divide-stone-100">
                 {lots.map((l) => (
                   <tr key={l.id} className="hover:bg-stone-50">
+                    <Td>
+                      {l.image_data ? (
+                        <img src={l.image_data} alt={l.fabric_name} className="h-12 w-12 rounded-lg border border-stone-200 object-cover" />
+                      ) : (
+                        <div className="h-12 w-12 rounded-lg border border-dashed border-stone-200 bg-stone-50" />
+                      )}
+                    </Td>
                     <Td>
                       <p className="font-medium text-stone-900">{l.lot_code}</p>
                       <p className="text-xs text-stone-500">{shortDate(l.purchase_date)}</p>

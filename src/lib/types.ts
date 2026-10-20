@@ -13,6 +13,7 @@ export interface FabricLot {
   purpose: Purpose
   low_stock_meters: number
   notes: string | null
+  image_data?: string | null
   created_at: string
 }
 
