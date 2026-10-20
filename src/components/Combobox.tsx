@@ -103,7 +103,10 @@ export function Combobox({
     }
     function onScrollOrResize(e: Event) {
       if (popRef.current?.contains(e.target as Node)) return
-      setOpen(false)
+      // Keep the list attached to its button. Closing here made it vanish on phones,
+      // where opening the list can scroll or resize the page.
+      const r = buttonRef.current?.getBoundingClientRect()
+      if (r) setRect({ left: r.left, top: r.bottom + 6, width: Math.max(r.width, 220) })
     }
     document.addEventListener('mousedown', onDown)
     window.addEventListener('resize', onScrollOrResize)
@@ -167,7 +170,7 @@ export function Combobox({
             >
               <div className="border-b border-stone-100 p-2">
                 <input
-                  autoFocus
+                  autoFocus={typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches}
                   id="combobox-search"
                   value={query}
                   onChange={(e) => {
