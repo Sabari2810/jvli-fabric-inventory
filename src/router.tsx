@@ -29,7 +29,10 @@ const stockRoute = createRoute({
 const lotsRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/lots',
-  component: LotsPage,
+  validateSearch: (search: Record<string, unknown>): { edit?: string } => ({
+    edit: typeof search.edit === 'string' && search.edit ? search.edit : undefined,
+  }),
+  component: LotsRouteComponent,
 })
 
 const usageRoute = createRoute({
@@ -40,6 +43,11 @@ const usageRoute = createRoute({
   }),
   component: UsageRouteComponent,
 })
+
+function LotsRouteComponent() {
+  const { edit } = lotsRoute.useSearch()
+  return <LotsPage key={edit ?? 'none'} editId={edit} />
+}
 
 function UsageRouteComponent() {
   const { lot } = usageRoute.useSearch()

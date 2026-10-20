@@ -1,20 +1,32 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
-import { useAddDrop, useAddLot, useDeleteLot, useDrops, useLots, useSetLotDrop, useUpdateLot } from '../lib/queries'
+import {
+  useAddDrop,
+  useAddLot,
+  useDeleteLot,
+  useDrops,
+  useLots,
+  useSetLotDrop,
+  useUpdateLot,
+} from '../lib/queries'
 import { meters, rupees, shortDate, todayISO } from '../lib/format'
 import { fileToWebpDataUrl } from '../lib/image'
 import type { FabricLot, Purpose } from '../lib/types'
 import {
   Badge,
   Card,
+  Drawer,
   EmptyState,
   ErrorNote,
   Field,
+  Icon,
   Loading,
   PageHeader,
   Td,
   Th,
+  Thumb,
   dangerLink,
   inputClass,
+  linkButton,
   primaryButton,
   subtleButton,
 } from '../components/ui'
@@ -45,15 +57,17 @@ const emptyForm = (): FormState => ({
   drop_id: '',
 })
 
-export function LotsPage() {
+export function LotsPage({ editId }: { editId?: string }) {
   const { data, isLoading, error } = useLots()
   const addLot = useAddLot()
+  const updateLot = useUpdateLot()
   const drops = useDrops()
   const addDrop = useAddDrop()
   const setLotDrop = useSetLotDrop()
-  const updateLot = useUpdateLot()
-  const [editingId, setEditingId] = useState<string | null>(null)
   const deleteLot = useDeleteLot()
+
+  const [open, setOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(emptyForm)
   const [formError, setFormError] = useState<string | null>(null)
   const [image, setImage] = useState<string | null>(null)
@@ -63,40 +77,13 @@ export function LotsPage() {
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((f) => ({ ...f, [key]: value }))
 
-  async function handleImageFile(file: File) {
+  function startAdd() {
+    setEditingId(null)
+    setForm(emptyForm())
+    setImage(null)
     setFormError(null)
-    setConverting(true)
-    try {
-      setImage(await fileToWebpDataUrl(file))
-    } catch (err) {
-      setImage(null)
-      setFormError(err instanceof Error ? err.message : 'Could not read that image.')
-    } finally {
-      setConverting(false)
-      if (fileRef.current) fileRef.current.value = ''
-    }
+    setOpen(true)
   }
-
-  function onPickImage(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file) void handleImageFile(file)
-  }
-
-  // Paste an image from the clipboard anywhere on this page (Ctrl/Cmd+V).
-  const pasteHandler = useRef(handleImageFile)
-  pasteHandler.current = handleImageFile
-  useEffect(() => {
-    function onPaste(e: ClipboardEvent) {
-      const items = Array.from(e.clipboardData?.items ?? [])
-      const item = items.find((i) => i.kind === 'file' && i.type.startsWith('image/'))
-      const file = item?.getAsFile()
-      if (!file) return
-      e.preventDefault()
-      void pasteHandler.current(file)
-    }
-    document.addEventListener('paste', onPaste)
-    return () => document.removeEventListener('paste', onPaste)
-  }, [])
 
   function startEdit(l: FabricLot) {
     setEditingId(l.id)
@@ -114,15 +101,54 @@ export function LotsPage() {
       notes: l.notes ?? '',
       drop_id: l.drop_id ?? '',
     })
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    setOpen(true)
   }
 
-  function cancelEdit() {
-    setEditingId(null)
-    setForm(emptyForm())
-    setImage(null)
+  // Arriving from "Edit purchase" on the stock page opens that purchase once.
+  const opened = useRef(false)
+  useEffect(() => {
+    if (!editId || opened.current || !data) return
+    const lot = data.find((l) => l.id === editId)
+    if (lot) {
+      opened.current = true
+      startEdit(lot)
+    }
+  }, [editId, data])
+
+  async function handleImageFile(file: File) {
     setFormError(null)
+    setConverting(true)
+    try {
+      setImage(await fileToWebpDataUrl(file))
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Could not read that image.')
+    } finally {
+      setConverting(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
   }
+
+  function onPickImage(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) void handleImageFile(file)
+  }
+
+  // Paste an image from the clipboard while the form is open (Ctrl/Cmd+V).
+  const pasteHandler = useRef(handleImageFile)
+  pasteHandler.current = handleImageFile
+  useEffect(() => {
+    if (!open) return
+    function onPaste(e: ClipboardEvent) {
+      const items = Array.from(e.clipboardData?.items ?? [])
+      const item = items.find((i) => i.kind === 'file' && i.type.startsWith('image/'))
+      const file = item?.getAsFile()
+      if (!file) return
+      e.preventDefault()
+      void pasteHandler.current(file)
+    }
+    document.addEventListener('paste', onPaste)
+    return () => document.removeEventListener('paste', onPaste)
+  }, [open])
 
   async function onNewDrop() {
     const name = window.prompt('Name of the new drop (for example, October Drop)')?.trim()
@@ -160,49 +186,183 @@ export function LotsPage() {
       }
       if (editingId) await updateLot.mutateAsync({ id: editingId, patch: payload })
       else await addLot.mutateAsync(payload)
-      setEditingId(null)
-      setForm(emptyForm())
-      setImage(null)
+      setOpen(false)
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Could not save the purchase.')
     }
   }
 
-  function onDelete(id: string, code: string) {
-    if (!window.confirm(`Delete the purchase of ${code}? This cannot be undone.`)) return
+  function onDelete(id: string, name: string) {
+    if (!window.confirm(`Delete the purchase of ${name}? This cannot be undone.`)) return
     deleteLot.mutate(id)
   }
 
   const lots = data ?? []
+  const saving = addLot.isPending || updateLot.isPending
 
   return (
     <>
       <PageHeader
-        title="Fabric purchases"
-        subtitle="Record each fabric you buy. Usage is logged against these purchases."
+        title="Purchases"
+        subtitle="Every fabric you buy. Usage is logged against these."
+        action={
+          <button type="button" className={primaryButton} onClick={startAdd}>
+            <Icon name="plus" className="h-4 w-4" />
+            Add purchase
+          </button>
+        }
       />
 
-      <Card className="mb-8">
-        <form onSubmit={onSubmit} className="p-5">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Field label="Date">
-              <input
-                type="date"
-                required
-                className={inputClass}
-                value={form.purchase_date}
-                onChange={(e) => set('purchase_date', e.target.value)}
-              />
-            </Field>
-            <Field label="Fabric name">
-              <input
-                required
-                placeholder="Cotton, rayon, chanderi"
-                className={inputClass}
-                value={form.fabric_name}
-                onChange={(e) => set('fabric_name', e.target.value)}
-              />
-            </Field>
+      <Card>
+        {isLoading ? <Loading /> : null}
+        {error ? (
+          <div className="p-4">
+            <ErrorNote message={error.message} />
+          </div>
+        ) : null}
+        {deleteLot.error ? (
+          <div className="p-4">
+            <ErrorNote message={deleteLot.error.message} />
+          </div>
+        ) : null}
+        {!isLoading && !error && lots.length === 0 ? (
+          <EmptyState
+            title="No purchases yet"
+            body="Add the first fabric you bought and it will show up here and on the stock page."
+            action={
+              <button type="button" className={primaryButton} onClick={startAdd}>
+                Add purchase
+              </button>
+            }
+          />
+        ) : null}
+        {lots.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-stone-100">
+              <thead>
+                <tr>
+                  <Th />
+                  <Th>Fabric</Th>
+                  <Th>Drop</Th>
+                  <Th>Bought for</Th>
+                  <Th align="right">Meters</Th>
+                  <Th align="right">Rate</Th>
+                  <Th align="right">Total</Th>
+                  <Th />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {lots.map((l) => (
+                  <tr key={l.id} className="transition hover:bg-stone-50/70">
+                    <Td>
+                      <Thumb src={l.image_data} name={l.fabric_name} />
+                    </Td>
+                    <Td>
+                      <p className="font-semibold text-ink">{l.fabric_name}</p>
+                      <p className="text-xs text-stone-500">
+                        {[l.color, l.supplier, shortDate(l.purchase_date)].filter(Boolean).join(', ')}
+                      </p>
+                    </Td>
+                    <Td>
+                      <select
+                        aria-label="Drop"
+                        className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-sm text-stone-700"
+                        value={l.drop_id ?? ''}
+                        disabled={setLotDrop.isPending}
+                        onChange={(e) => setLotDrop.mutate({ id: l.id, dropId: e.target.value || null })}
+                      >
+                        <option value="">No drop</option>
+                        {(drops.data ?? []).map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {d.name}
+                          </option>
+                        ))}
+                      </select>
+                    </Td>
+                    <Td>
+                      <Badge tone={l.purpose === 'sample' ? 'blue' : 'maroon'}>
+                        {l.purpose === 'sample' ? 'Sample' : 'Production'}
+                      </Badge>
+                    </Td>
+                    <Td align="right">{meters(l.meters_bought)}</Td>
+                    <Td align="right">{rupees(l.rate_per_meter)}</Td>
+                    <Td align="right" className="font-semibold">
+                      {rupees(Number(l.meters_bought) * Number(l.rate_per_meter))}
+                    </Td>
+                    <Td align="right" className="whitespace-nowrap">
+                      <button type="button" className={`${linkButton} mr-4`} onClick={() => startEdit(l)}>
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className={dangerLink}
+                        disabled={deleteLot.isPending}
+                        onClick={() => onDelete(l.id, l.fabric_name)}
+                      >
+                        Delete
+                      </button>
+                    </Td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </Card>
+
+      <Drawer
+        open={open}
+        title={editingId ? 'Edit purchase' : 'Add purchase'}
+        onClose={() => setOpen(false)}
+      >
+        <form onSubmit={onSubmit} className="space-y-5">
+          <div>
+            <span className="mb-1.5 block text-sm font-medium text-stone-700">Photo</span>
+            <div className="flex items-center gap-4 rounded-xl border border-dashed border-stone-300 bg-stone-50 p-4">
+              {image ? (
+                <img src={image} alt="Fabric preview" className="h-20 w-20 rounded-lg object-cover" />
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-white text-stone-400">
+                  <Icon name="image" className="h-8 w-8" />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={onPickImage}
+                  className="sr-only"
+                  id="lot-photo"
+                />
+                <div className="flex flex-wrap items-center gap-3">
+                  <label htmlFor="lot-photo" className={`${subtleButton} cursor-pointer`}>
+                    {image ? 'Change photo' : 'Choose photo'}
+                  </label>
+                  {image ? (
+                    <button type="button" className={dangerLink} onClick={() => setImage(null)}>
+                      Remove
+                    </button>
+                  ) : null}
+                </div>
+                <p className="mt-2 text-xs text-stone-500">
+                  {converting ? 'Converting to WebP' : 'Or paste an image with Ctrl+V (Cmd+V on Mac).'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <Field label="Fabric name">
+            <input
+              required
+              autoFocus
+              placeholder="Cotton, rayon, chanderi"
+              className={inputClass}
+              value={form.fabric_name}
+              onChange={(e) => set('fabric_name', e.target.value)}
+            />
+          </Field>
+          <div className="grid grid-cols-2 gap-4">
             <Field label="Color">
               <input
                 placeholder="Indigo"
@@ -242,187 +402,77 @@ export function LotsPage() {
                 onChange={(e) => set('rate_per_meter', e.target.value)}
               />
             </Field>
+            <Field label="Purchase date">
+              <input
+                type="date"
+                required
+                className={inputClass}
+                value={form.purchase_date}
+                onChange={(e) => set('purchase_date', e.target.value)}
+              />
+            </Field>
             <Field label="Bought for">
               <select
                 className={inputClass}
                 value={form.purpose}
                 onChange={(e) => set('purpose', e.target.value as Purpose)}
               >
-                <option value="production">Production (actual kurtis)</option>
+                <option value="production">Production</option>
                 <option value="sample">Sample</option>
               </select>
             </Field>
-            <Field label="Low stock alert at (m)">
-              <input
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                min="0"
-                className={inputClass}
-                value={form.low_stock_meters}
-                onChange={(e) => set('low_stock_meters', e.target.value)}
-              />
-            </Field>
-            <Field label="Drop" hint="Group this fabric with the other fabrics of a launch">
-              <div className="flex gap-2">
-                <select
-                  className={inputClass}
-                  value={form.drop_id}
-                  onChange={(e) => set('drop_id', e.target.value)}
-                >
-                  <option value="">No drop</option>
-                  {(drops.data ?? []).map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name}
-                    </option>
-                  ))}
-                </select>
-                <button type="button" className={subtleButton} onClick={() => void onNewDrop()}>
-                  New drop
-                </button>
-              </div>
-            </Field>
-            <Field label="Fabric photo" hint="Choose a file, or paste an image anywhere on this page (Ctrl+V / Cmd+V). Converted to WebP before saving." className="sm:col-span-2 lg:col-span-4">
-              <div className="flex items-center gap-4">
-                {image ? (
-                  <img src={image} alt="Fabric preview" className="h-16 w-16 rounded-lg border border-stone-200 object-cover" />
-                ) : null}
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={onPickImage}
-                  className="block w-full text-sm text-stone-600 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-maroon-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-maroon-900 hover:file:bg-maroon-100"
-                />
-                {image ? (
-                  <button type="button" className={dangerLink} onClick={() => setImage(null)}>
-                    Remove
-                  </button>
-                ) : null}
-              </div>
-              {converting ? <span className="mt-1 block text-xs text-stone-500">Converting</span> : null}
-            </Field>
-            <Field label="Notes" className="sm:col-span-2 lg:col-span-4">
-              <input
-                placeholder="Bill number, quality remarks"
-                className={inputClass}
-                value={form.notes}
-                onChange={(e) => set('notes', e.target.value)}
-              />
-            </Field>
           </div>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <button type="submit" disabled={addLot.isPending || updateLot.isPending || converting} className={primaryButton}>
-              {addLot.isPending || updateLot.isPending ? 'Saving' : editingId ? 'Update purchase' : 'Save purchase'}
-            </button>
-            {editingId ? (
-              <button type="button" className={subtleButton} onClick={cancelEdit}>
-                Cancel
+
+          <Field label="Drop" hint="Group this fabric with the others for a launch.">
+            <div className="flex gap-2">
+              <select
+                className={inputClass}
+                value={form.drop_id}
+                onChange={(e) => set('drop_id', e.target.value)}
+              >
+                <option value="">No drop</option>
+                {(drops.data ?? []).map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+              <button type="button" className={`${subtleButton} shrink-0`} onClick={() => void onNewDrop()}>
+                New drop
               </button>
-            ) : null}
-            <div className="min-w-0 flex-1">
-              <ErrorNote message={formError} />
             </div>
+          </Field>
+          <Field label="Warn me when meters left drops to" hint="Shows a Running low tag on the stock page.">
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              className={inputClass}
+              value={form.low_stock_meters}
+              onChange={(e) => set('low_stock_meters', e.target.value)}
+            />
+          </Field>
+          <Field label="Notes">
+            <input
+              placeholder="Bill number, quality remarks"
+              className={inputClass}
+              value={form.notes}
+              onChange={(e) => set('notes', e.target.value)}
+            />
+          </Field>
+
+          <ErrorNote message={formError} />
+          <div className="flex gap-3 border-t border-stone-100 pt-5">
+            <button type="submit" disabled={saving || converting} className={primaryButton}>
+              {saving ? 'Saving' : editingId ? 'Save changes' : 'Add purchase'}
+            </button>
+            <button type="button" className={subtleButton} onClick={() => setOpen(false)}>
+              Cancel
+            </button>
           </div>
         </form>
-      </Card>
-
-      <Card>
-        {isLoading ? <Loading /> : null}
-        {error ? (
-          <div className="p-4">
-            <ErrorNote message={error.message} />
-          </div>
-        ) : null}
-        {deleteLot.error ? (
-          <div className="p-4">
-            <ErrorNote message={deleteLot.error.message} />
-          </div>
-        ) : null}
-        {!isLoading && !error && lots.length === 0 ? (
-          <EmptyState title="No purchases yet" body="Your saved purchases will show up here." />
-        ) : null}
-        {lots.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-stone-200">
-              <thead className="bg-stone-50">
-                <tr>
-                  <Th />
-                  <Th>Fabric</Th>
-                  <Th>Drop</Th>
-                  <Th>Supplier</Th>
-                  <Th>Purpose</Th>
-                  <Th align="right">Meters</Th>
-                  <Th align="right">Rate</Th>
-                  <Th align="right">Total cost</Th>
-                  <Th />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100">
-                {lots.map((l) => (
-                  <tr key={l.id} className="hover:bg-stone-50">
-                    <Td>
-                      {l.image_data ? (
-                        <img src={l.image_data} alt={l.fabric_name} className="h-12 w-12 rounded-lg border border-stone-200 object-cover" />
-                      ) : (
-                        <div className="h-12 w-12 rounded-lg border border-dashed border-stone-200 bg-stone-50" />
-                      )}
-                    </Td>
-                    <Td>
-                      <p className="text-stone-900">{l.fabric_name}</p>
-                      <p className="text-xs text-stone-500">
-                        {l.color || 'No color'} | {shortDate(l.purchase_date)}
-                      </p>
-                    </Td>
-                    <Td>
-                      <select
-                        aria-label="Drop"
-                        className="rounded-lg border border-stone-300 bg-white px-2 py-1 text-sm"
-                        value={l.drop_id ?? ''}
-                        disabled={setLotDrop.isPending}
-                        onChange={(e) => setLotDrop.mutate({ id: l.id, dropId: e.target.value || null })}
-                      >
-                        <option value="">No drop</option>
-                        {(drops.data ?? []).map((d) => (
-                          <option key={d.id} value={d.id}>
-                            {d.name}
-                          </option>
-                        ))}
-                      </select>
-                    </Td>
-                    <Td className="text-stone-600">{l.supplier || '-'}</Td>
-                    <Td>
-                      <Badge tone={l.purpose === 'sample' ? 'blue' : 'maroon'}>
-                        {l.purpose === 'sample' ? 'Sample' : 'Production'}
-                      </Badge>
-                    </Td>
-                    <Td align="right">{meters(l.meters_bought)}</Td>
-                    <Td align="right">{rupees(l.rate_per_meter)}</Td>
-                    <Td align="right">{rupees(Number(l.meters_bought) * Number(l.rate_per_meter))}</Td>
-                    <Td align="right" className="whitespace-nowrap">
-                      <button
-                        type="button"
-                        className="mr-4 text-sm font-medium text-maroon-900 hover:underline"
-                        onClick={() => startEdit(l)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className={dangerLink}
-                        disabled={deleteLot.isPending}
-                        onClick={() => onDelete(l.id, l.fabric_name)}
-                      >
-                        Delete
-                      </button>
-                    </Td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : null}
-      </Card>
+      </Drawer>
     </>
   )
 }
