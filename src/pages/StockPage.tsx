@@ -203,7 +203,69 @@ export function StockPage() {
       ) : null}
 
       {filtered.length > 0 ? (
-        <Card>
+        <>
+        <ul className="space-y-3 md:hidden">
+          {filtered.map((r) => {
+            const left = Number(r.meters_left)
+            const drop = dropName(r.drop_id)
+            const sub = [typeName(r.fabric_type_id), r.width_inches ? `${r.width_inches} in` : null, r.color]
+              .filter(Boolean)
+              .join(', ')
+            return (
+              <li key={r.id} className="rounded-2xl border border-stone-200/80 bg-white p-4">
+                <div className="flex gap-3">
+                  <Thumb src={r.image_data} name={r.fabric_name} className="h-20 w-20" />
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      to="/fabric/$fabricId"
+                      params={{ fabricId: r.id }}
+                      className="block font-semibold leading-snug text-ink hover:text-maroon-900"
+                    >
+                      {r.fabric_name}
+                    </Link>
+                    <p className="mt-0.5 text-xs text-stone-500">{sub || 'No color'}</p>
+                    {drop ? (
+                      <div className="mt-2">
+                        <Badge tone="maroon">{drop}</Badge>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+                <dl className="mt-4 grid grid-cols-3 gap-px overflow-hidden rounded-xl bg-stone-200/80 text-center">
+                  <div className="bg-stone-50 py-2.5">
+                    <dt className="text-xs text-stone-500">Stock in</dt>
+                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums">{plain(r.meters_bought)} m</dd>
+                  </div>
+                  <div className="bg-stone-50 py-2.5">
+                    <dt className="text-xs text-stone-500">Wastage</dt>
+                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums">{plain(r.meters_wastage)} m</dd>
+                  </div>
+                  <div className="bg-maroon-50 py-2.5">
+                    <dt className="text-xs text-maroon-900/70">Left</dt>
+                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums text-maroon-900">{plain(left)} m</dd>
+                  </div>
+                </dl>
+                {canEdit ? (
+                  <div className="mt-3 flex items-center justify-between">
+                    <div className="flex gap-4">
+                      <button type="button" className={linkButton} onClick={() => setStockInFor(r.id)}>
+                        Stock in
+                      </button>
+                      <Link to="/out" search={{ lot: r.id }} className={linkButton}>
+                        Stock out
+                      </Link>
+                    </div>
+                    <div className="flex">
+                      <IconButton icon="edit" label="Edit fabric" onClick={() => openFabric(r)} />
+                      <IconButton icon="trash" label="Delete fabric" danger onClick={() => onDelete(r)} />
+                    </div>
+                  </div>
+                ) : null}
+              </li>
+            )
+          })}
+        </ul>
+        <Card className="hidden md:block">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-stone-100">
               <thead>
@@ -265,6 +327,7 @@ export function StockPage() {
             </table>
           </div>
         </Card>
+        </>
       ) : null}
       {deleteFabric.error ? <div className="mt-4"><ErrorNote message={deleteFabric.error.message} /></div> : null}
 
