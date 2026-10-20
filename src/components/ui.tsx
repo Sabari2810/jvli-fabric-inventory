@@ -67,12 +67,16 @@ export function PageHeader({
   action?: ReactNode
 }) {
   return (
-    <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">{title}</h1>
-        {subtitle ? <p className="mt-1.5 max-w-xl text-[15px] text-stone-500">{subtitle}</p> : null}
+    <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 sm:mb-8 sm:flex sm:flex-wrap sm:items-end sm:justify-between sm:gap-4">
+      <div className="contents sm:block">
+        <h1 className="col-start-1 row-start-1 font-display text-2xl font-semibold leading-tight tracking-tight text-ink sm:text-3xl">
+          {title}
+        </h1>
+        {subtitle ? (
+          <p className="col-span-2 row-start-2 max-w-xl text-sm text-stone-500 sm:mt-1.5 sm:text-[15px]">{subtitle}</p>
+        ) : null}
       </div>
-      {action}
+      {action ? <div className="col-start-2 row-start-1 flex justify-end sm:block">{action}</div> : null}
     </div>
   )
 }
