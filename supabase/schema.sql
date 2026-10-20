@@ -255,3 +255,9 @@ alter table public.suppliers add column if not exists phone text;
 alter table public.suppliers add column if not exists location text;
 alter table public.suppliers add column if not exists notes text;
 alter table public.suppliers add column if not exists website text;
+
+-- Patterns library and per-drop styles (costing from the November drop sheet).
+-- Tables: patterns (pattern_no unique, image_data, default fabric/lining usage),
+-- drop_styles (drop_id, pattern_id, fabric_id, fabric_type_id, width_inches, swatch and reference images,
+-- usage/rate/stitching/misc/profit/gst/shipping, planned_qty). Both have RLS plus the viewer restrictive policies.
+-- Fabric types are managed from the Fabric types page.

@@ -5,10 +5,12 @@ import { Icon, Loading } from './ui'
 
 const items = [
   { to: '/', label: 'Stock', icon: 'stock', exact: true },
-  { to: '/drops', label: 'Drops', icon: 'drop', exact: false },
-  { to: '/suppliers', label: 'Suppliers', icon: 'people', exact: false },
   { to: '/in', label: 'Stock in', icon: 'purchase', exact: false },
   { to: '/out', label: 'Stock out', icon: 'cut', exact: false },
+  { to: '/drops', label: 'Drops', icon: 'drop', exact: false },
+  { to: '/patterns', label: 'Patterns', icon: 'scissors', exact: false },
+  { to: '/fabric-types', label: 'Fabric types', icon: 'swatch', exact: false },
+  { to: '/suppliers', label: 'Suppliers', icon: 'people', exact: false },
 ] as const
 
 const sideLink =
@@ -16,7 +18,7 @@ const sideLink =
 const sideActive = '!bg-white !text-maroon-900'
 
 const tabLink =
-  'flex flex-1 flex-col items-center gap-1 py-2.5 text-xs font-medium text-stone-500 transition'
+  'flex min-w-[4.75rem] flex-1 flex-col items-center gap-1 px-1 py-2.5 text-xs font-medium text-stone-500 transition'
 const tabActive = '!text-maroon-900'
 
 export function AppLayout() {
@@ -88,7 +90,7 @@ export function AppLayout() {
 
       {/* Mobile bottom tabs */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 flex border-t border-stone-200 bg-white lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 flex overflow-x-auto border-t border-stone-200 bg-white lg:hidden"
         aria-label="Main"
       >
         {items.map((i) => (

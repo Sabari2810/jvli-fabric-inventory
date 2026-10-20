@@ -1,11 +1,13 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useDrops, useStock } from '../lib/queries'
 import { meters, rupees } from '../lib/format'
+import { StylesTab } from '../components/StylesTab'
 import { Card, EmptyState, ErrorNote, Loading, Td, Th, Thumb, linkButton } from '../components/ui'
 
 export function DropDetailPage({ dropId }: { dropId: string }) {
   const drops = useDrops()
+  const [tab, setTab] = useState<'fabrics' | 'styles'>('fabrics')
   const stock = useStock()
 
   const fabrics = useMemo(() => (stock.data ?? []).filter((f) => f.drop_id === dropId), [stock.data, dropId])
@@ -65,6 +67,25 @@ export function DropDetailPage({ dropId }: { dropId: string }) {
       <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">{drop.name}</h1>
       <p className="mt-1.5 mb-8 text-[15px] text-stone-500">Totals across every fabric in this drop.</p>
 
+      <div className="mb-6 flex gap-1 border-b border-stone-200">
+        {(['fabrics', 'styles'] as const).map((k) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => setTab(k)}
+            className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-semibold transition ${
+              tab === k ? 'border-maroon-900 text-maroon-900' : 'border-transparent text-stone-500 hover:text-ink'
+            }`}
+          >
+            {k === 'fabrics' ? 'Fabrics' : 'Styles'}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'styles' ? <StylesTab dropId={dropId} /> : null}
+
+      {tab === 'fabrics' ? (
+        <>
       <section className="mb-8 grid overflow-hidden rounded-2xl bg-maroon-900 text-white lg:grid-cols-[minmax(0,15rem)_1fr]">
         <div className="p-6 lg:p-8">
           <p className="text-sm text-maroon-200/80">Left on the shelf</p>
@@ -148,6 +169,8 @@ export function DropDetailPage({ dropId }: { dropId: string }) {
           </div>
         )}
       </Card>
+        </>
+      ) : null}
     </>
   )
 }

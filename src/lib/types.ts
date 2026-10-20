@@ -98,3 +98,47 @@ export interface FabricUsage {
 }
 
 export type NewUsage = Omit<FabricUsage, 'id' | 'created_at' | 'fabric_lots'>
+
+export interface Pattern {
+  id: string
+  pattern_no: string
+  image_data: string | null
+  fabric_usage_m: number
+  lining_usage_m: number
+  notes: string | null
+  created_at: string
+}
+
+export interface PatternInput {
+  pattern_no: string
+  image_data: string | null
+  fabric_usage_m: number
+  lining_usage_m: number
+  notes: string | null
+}
+
+export interface DropStyle {
+  id: string
+  drop_id: string
+  pattern_id: string
+  position: number
+  fabric_type_id: string | null
+  fabric_id: string | null
+  width_inches: number | null
+  fabric_image: string | null
+  reference_image: string | null
+  fabric_usage_m: number
+  fabric_rate: number
+  lining_usage_m: number
+  lining_rate: number
+  stitching: number
+  misc: number
+  profit: number
+  gst: number
+  shipping: number
+  planned_qty: number | null
+  notes: string | null
+  created_at: string
+}
+
+export type DropStyleInput = Omit<DropStyle, 'id' | 'created_at'>

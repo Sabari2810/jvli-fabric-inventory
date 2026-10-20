@@ -9,12 +9,16 @@ export function PhotoField({
   onError,
   active,
   onBusy,
+  label = 'Photo',
+  inputId = 'fabric-photo',
 }: {
   value: string | null
   onChange: (v: string | null) => void
   onError: (message: string | null) => void
   active: boolean
   onBusy?: (busy: boolean) => void
+  label?: string
+  inputId?: string
 }) {
   const [converting, setConverting] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -58,7 +62,7 @@ export function PhotoField({
 
   return (
     <div>
-      <span className="mb-1.5 block text-sm font-medium text-stone-700">Photo</span>
+      <span className="mb-1.5 block text-sm font-medium text-stone-700">{label}</span>
       <div className="flex items-center gap-4 rounded-xl border border-dashed border-stone-300 bg-stone-50 p-4">
         {value ? (
           <img src={value} alt="Fabric preview" className="h-20 w-20 rounded-lg object-cover" />
@@ -68,9 +72,9 @@ export function PhotoField({
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <input ref={fileRef} type="file" accept="image/*" onChange={onPick} className="sr-only" id="fabric-photo" />
+          <input ref={fileRef} type="file" accept="image/*" onChange={onPick} className="sr-only" id={inputId} />
           <div className="flex flex-wrap items-center gap-3">
-            <label htmlFor="fabric-photo" className={`${subtleButton} cursor-pointer`}>
+            <label htmlFor={inputId} className={`${subtleButton} cursor-pointer`}>
               {value ? 'Change photo' : 'Choose photo'}
             </label>
             {value ? (

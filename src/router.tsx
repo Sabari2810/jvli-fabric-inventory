@@ -5,6 +5,9 @@ import { StockPage } from './pages/StockPage'
 import { DropDetailPage } from './pages/DropDetailPage'
 import { DropsPage } from './pages/DropsPage'
 import { FabricDetailPage } from './pages/FabricDetailPage'
+import { FabricTypeDetailPage } from './pages/FabricTypeDetailPage'
+import { FabricTypesPage } from './pages/FabricTypesPage'
+import { PatternsPage } from './pages/PatternsPage'
 import { SupplierDetailPage } from './pages/SupplierDetailPage'
 import { SuppliersPage } from './pages/SuppliersPage'
 import { StockInPage } from './pages/StockInPage'
@@ -82,6 +85,29 @@ function SupplierRouteComponent() {
   return <SupplierDetailPage key={supplierId} supplierId={supplierId} />
 }
 
+const fabricTypesRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/fabric-types',
+  component: FabricTypesPage,
+})
+
+const fabricTypeRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/fabric-types/$typeId',
+  component: FabricTypeRouteComponent,
+})
+
+function FabricTypeRouteComponent() {
+  const { typeId } = fabricTypeRoute.useParams()
+  return <FabricTypeDetailPage key={typeId} typeId={typeId} />
+}
+
+const patternsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/patterns',
+  component: PatternsPage,
+})
+
 const usageRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/out',
@@ -98,7 +124,7 @@ function UsageRouteComponent() {
 
 const routeTree = rootRoute.addChildren([
   loginRoute,
-  appRoute.addChildren([stockRoute, fabricRoute, dropsRoute, dropRoute, suppliersRoute, supplierRoute, stockInRoute, usageRoute]),
+  appRoute.addChildren([stockRoute, fabricRoute, dropsRoute, dropRoute, suppliersRoute, supplierRoute, fabricTypesRoute, fabricTypeRoute, patternsRoute, stockInRoute, usageRoute]),
 ])
 
 export const router = createRouter({ routeTree })
