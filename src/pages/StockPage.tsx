@@ -4,12 +4,15 @@ import { useDrops, useStock } from '../lib/queries'
 import { meters, plain, rupees, shortDate } from '../lib/format'
 import {
   Badge,
+  Card,
   EmptyState,
   ErrorNote,
   Icon,
   Loading,
   PageHeader,
   TapeBar,
+  Td,
+  Th,
   Thumb,
   filterClass,
   linkButton,
@@ -159,76 +162,69 @@ export function StockPage() {
         </div>
       ) : null}
 
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-        {filtered.map((r) => {
-          const left = Number(r.meters_left)
-          const empty = left <= 0
-          const tone = empty ? 'empty' : 'ok'
-          const drop = dropName(r.drop_id)
-          return (
-            <article
-              key={r.id}
-              className="flex flex-col overflow-hidden rounded-2xl border border-stone-200/80 bg-white"
-            >
-              <div className="relative">
-                <Thumb
-                  src={r.image_data}
-                  name={r.fabric_name}
-                  className="aspect-[4/3] w-full !rounded-none !text-6xl"
-                />
-                <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
-                  <span>{drop ? <Badge tone="maroon">{drop}</Badge> : null}</span>
-                  {empty ? <Badge tone="neutral">Finished</Badge> : null}
-                </div>
-              </div>
-
-              <div className="flex flex-1 flex-col p-5">
-                <h3 className="font-display text-lg font-semibold leading-snug text-ink">
-                  {r.fabric_name}
-                </h3>
-                <p className="mt-0.5 text-sm text-stone-500">
-                  {[r.color, r.supplier, shortDate(r.purchase_date)].filter(Boolean).join(', ')}
-                </p>
-
-                <div className="mt-5">
-                  <div className="mb-2 flex items-baseline justify-between">
-                    <p className="font-display text-2xl font-semibold tabular-nums text-ink">
-                      {meters(left)}
-                      <span className="ml-1.5 text-sm font-medium text-stone-500">left</span>
-                    </p>
-                    <p className="text-sm tabular-nums text-stone-500">of {meters(r.meters_bought)}</p>
-                  </div>
-                  <TapeBar left={left} total={Number(r.meters_bought)} tone={tone} />
-                </div>
-
-                <dl className="mt-4 grid grid-cols-3 gap-2 text-sm">
-                  <div>
-                    <dt className="text-xs text-stone-500">Samples</dt>
-                    <dd className="font-semibold tabular-nums">{plain(r.meters_sample)} m</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-stone-500">Kurtis</dt>
-                    <dd className="font-semibold tabular-nums">{plain(r.meters_actual)} m</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-stone-500">Wastage</dt>
-                    <dd className="font-semibold tabular-nums">{plain(r.meters_wastage)} m</dd>
-                  </div>
-                </dl>
-
-                <div className="mt-5 flex items-center justify-between border-t border-stone-100 pt-4">
-                  <Link to="/usage" search={{ lot: r.id }} className={linkButton}>
-                    Log usage
-                  </Link>
-                  <Link to="/lots" search={{ edit: r.id }} className="text-sm text-stone-500 hover:text-ink">
-                    Edit purchase
-                  </Link>
-                </div>
-              </div>
-            </article>
-          )
-        })}
-      </div>
+      {filtered.length > 0 ? (
+        <Card>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-stone-100">
+              <thead>
+                <tr>
+                  <Th />
+                  <Th>Fabric</Th>
+                  <Th>Drop</Th>
+                  <Th align="right">Bought</Th>
+                  <Th align="right">Samples</Th>
+                  <Th align="right">Kurtis</Th>
+                  <Th align="right">Wastage</Th>
+                  <Th>Left</Th>
+                  <Th />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {filtered.map((r) => {
+                  const left = Number(r.meters_left)
+                  const empty = left <= 0
+                  const drop = dropName(r.drop_id)
+                  return (
+                    <tr key={r.id} className="transition hover:bg-stone-50/70">
+                      <Td>
+                        <Thumb src={r.image_data} name={r.fabric_name} />
+                      </Td>
+                      <Td>
+                        <p className="font-semibold text-ink">{r.fabric_name}</p>
+                        <p className="text-xs text-stone-500">
+                          {[r.color, r.supplier, shortDate(r.purchase_date)].filter(Boolean).join(', ')}
+                        </p>
+                      </Td>
+                      <Td>{drop ? <Badge tone="maroon">{drop}</Badge> : <span className="text-stone-400">-</span>}</Td>
+                      <Td align="right">{plain(r.meters_bought)} m</Td>
+                      <Td align="right">{plain(r.meters_sample)} m</Td>
+                      <Td align="right">{plain(r.meters_actual)} m</Td>
+                      <Td align="right">{plain(r.meters_wastage)} m</Td>
+                      <Td className="min-w-40">
+                        <p className="font-display font-semibold tabular-nums text-ink">
+                          {meters(left)}
+                          {empty ? <span className="ml-2 align-middle"><Badge>Finished</Badge></span> : null}
+                        </p>
+                        <div className="mt-1.5">
+                          <TapeBar left={left} total={Number(r.meters_bought)} tone={empty ? 'empty' : 'ok'} />
+                        </div>
+                      </Td>
+                      <Td align="right" className="whitespace-nowrap">
+                        <Link to="/usage" search={{ lot: r.id }} className={`${linkButton} mr-4`}>
+                          Log usage
+                        </Link>
+                        <Link to="/lots" search={{ edit: r.id }} className="text-sm text-stone-500 hover:text-ink">
+                          Edit
+                        </Link>
+                      </Td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      ) : null}
     </>
   )
 }
