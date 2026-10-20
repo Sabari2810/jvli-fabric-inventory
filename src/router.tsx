@@ -2,7 +2,7 @@ import { createRootRoute, createRoute, createRouter, Outlet } from '@tanstack/re
 import { AppLayout } from './components/AppLayout'
 import { LoginPage } from './pages/LoginPage'
 import { StockPage } from './pages/StockPage'
-import { LotsPage } from './pages/LotsPage'
+import { StockInPage } from './pages/StockInPage'
 import { UsagePage } from './pages/UsagePage'
 
 const rootRoute = createRootRoute({ component: () => <Outlet /> })
@@ -26,29 +26,20 @@ const stockRoute = createRoute({
   component: StockPage,
 })
 
-const lotsRoute = createRoute({
+const stockInRoute = createRoute({
   getParentRoute: () => appRoute,
-  path: '/lots',
-  validateSearch: (search: Record<string, unknown>): { edit?: string; restock?: string } => ({
-    edit: typeof search.edit === 'string' && search.edit ? search.edit : undefined,
-    restock: typeof search.restock === 'string' && search.restock ? search.restock : undefined,
-  }),
-  component: LotsRouteComponent,
+  path: '/in',
+  component: StockInPage,
 })
 
 const usageRoute = createRoute({
   getParentRoute: () => appRoute,
-  path: '/usage',
+  path: '/out',
   validateSearch: (search: Record<string, unknown>): { lot?: string } => ({
     lot: typeof search.lot === 'string' && search.lot ? search.lot : undefined,
   }),
   component: UsageRouteComponent,
 })
-
-function LotsRouteComponent() {
-  const { edit, restock } = lotsRoute.useSearch()
-  return <LotsPage key={`${edit ?? ''}${restock ?? ''}`} editId={edit} restockId={restock} />
-}
 
 function UsageRouteComponent() {
   const { lot } = usageRoute.useSearch()
@@ -57,7 +48,7 @@ function UsageRouteComponent() {
 
 const routeTree = rootRoute.addChildren([
   loginRoute,
-  appRoute.addChildren([stockRoute, lotsRoute, usageRoute]),
+  appRoute.addChildren([stockRoute, stockInRoute, usageRoute]),
 ])
 
 export const router = createRouter({ routeTree })

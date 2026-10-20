@@ -175,3 +175,30 @@ grant select, insert, update, delete on public.drops to authenticated;
 alter table public.fabric_lots add column if not exists drop_id uuid references public.drops(id) on delete set null;
 create index if not exists fabric_lots_drop_idx on public.fabric_lots (drop_id);
 -- fabric_stock also exposes l.drop_id as its last column (re-run the view above with it appended).
+
+-- ---------------------------------------------------------------------------
+-- Stock in ledger: each fabric (fabric_lots row) has many stock in entries.
+-- fabric_lots.meters_bought / rate_per_meter / purpose / supplier are legacy;
+-- the fabric_stock view now adds everything up from fabric_stock_in and fabric_usage.
+-- (Applied to the live database as migrations: stock_in_table, stock_in_guards, stock_view_ledger.)
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.fabric_stock_in (
+  id uuid primary key default gen_random_uuid(),
+  lot_id uuid not null references public.fabric_lots(id) on delete cascade,
+  entry_date date not null default current_date,
+  meters numeric(10,2) not null check (meters > 0),
+  rate_per_meter numeric(10,2) not null default 0 check (rate_per_meter >= 0),
+  supplier text,
+  purpose text not null check (purpose in ('sample','production')),
+  notes text,
+  created_by uuid default auth.uid(),
+  created_at timestamptz not null default now()
+);
+create index if not exists fabric_stock_in_lot_idx on public.fabric_stock_in (lot_id);
+alter table public.fabric_stock_in enable row level security;
+create policy "stock in: authenticated full access" on public.fabric_stock_in for all to authenticated using (true) with check (true);
+revoke all on public.fabric_stock_in from anon;
+grant select, insert, update, delete on public.fabric_stock_in to authenticated;
+alter table public.fabric_lots alter column meters_bought drop not null;
+alter table public.fabric_lots alter column purpose drop not null;

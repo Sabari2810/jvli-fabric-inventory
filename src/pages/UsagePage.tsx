@@ -83,6 +83,10 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
     })
   }, [usage.data, lotFilter, typeFilter])
 
+  const rateByFabric = useMemo(
+    () => new Map(lots.map((l) => [l.id, Number(l.rate_per_meter)])),
+    [lots],
+  )
   const filteredLot = lotFilter ? lots.find((l) => l.id === lotFilter) : undefined
 
   const totals = useMemo(() => {
@@ -92,7 +96,7 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
     for (const u of rows) {
       used += Number(u.meters_used)
       wastage += Number(u.wastage_meters)
-      cost += Number(u.meters_used) * Number(u.fabric_lots?.rate_per_meter ?? 0)
+      cost += Number(u.meters_used) * (rateByFabric.get(u.lot_id) ?? 0)
     }
     return { used, wastage, cost }
   }, [rows])
@@ -161,12 +165,12 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
   return (
     <>
       <PageHeader
-        title="Usage"
-        subtitle="Log fabric each time it is cut, tagged as a sample or a kurti for sale."
+        title="Stock out"
+        subtitle="Record fabric each time it is cut, tagged as a sample or a kurti for sale."
         action={
           <button type="button" className={primaryButton} onClick={startAdd}>
             <Icon name="plus" className="h-4 w-4" />
-            Log usage
+            Stock out
           </button>
         }
       />
@@ -189,7 +193,7 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
               <button
                 type="button"
                 className={subtleButton}
-                onClick={() => navigate({ to: '/usage', search: {} })}
+                onClick={() => navigate({ to: '/out', search: {} })}
               >
                 Show all fabrics
               </button>
@@ -214,20 +218,20 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
 
         {!usage.isLoading && !usage.error && rows.length === 0 ? (
           <EmptyState
-            title="No usage logged"
+            title="No stock out yet"
             body={
               lots.length === 0
-                ? 'Add a fabric purchase first, then log what you cut from it.'
-                : 'Log the first cut and it will appear here.'
+                ? 'Add a fabric and its stock in first, then record what you cut from it.'
+                : 'Record the first cut and it will appear here.'
             }
             action={
               lots.length === 0 ? (
-                <Link to="/lots" className={primaryButton}>
-                  Add purchase
+                <Link to="/" className={primaryButton}>
+                  Go to stock
                 </Link>
               ) : (
                 <button type="button" className={primaryButton} onClick={startAdd}>
-                  Log usage
+                  Stock out
                 </button>
               )
             }
@@ -266,7 +270,7 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
                     <Td align="right">{meters(u.meters_used)}</Td>
                     <Td align="right">{meters(u.wastage_meters)}</Td>
                     <Td align="right" className="font-semibold">
-                      {rupees(Number(u.meters_used) * Number(u.fabric_lots?.rate_per_meter ?? 0))}
+                      {rupees(Number(u.meters_used) * (rateByFabric.get(u.lot_id) ?? 0))}
                     </Td>
                     <Td align="right" className="whitespace-nowrap">
                       <button type="button" className={`${linkButton} mr-4`} onClick={() => startEdit(u)}>
@@ -289,7 +293,7 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
         ) : null}
       </Card>
 
-      <Drawer open={open} title={editing ? 'Edit usage' : 'Log usage'} onClose={() => setOpen(false)}>
+      <Drawer open={open} title={editing ? 'Edit stock out' : 'Stock out'} onClose={() => setOpen(false)}>
         <form onSubmit={onSubmit} className="space-y-5">
           <Field
             label="Fabric"
@@ -376,7 +380,7 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
           <ErrorNote message={formError} />
           <div className="flex gap-3 border-t border-stone-100 pt-5">
             <button type="submit" disabled={saving} className={primaryButton}>
-              {saving ? 'Saving' : editing ? 'Save changes' : 'Log usage'}
+              {saving ? 'Saving' : editing ? 'Save changes' : 'Stock out'}
             </button>
             <button type="button" className={subtleButton} onClick={() => setOpen(false)}>
               Cancel

@@ -1,10 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from './supabase'
-import type { Drop, FabricLot, FabricStock, FabricUsage, NewLot, NewUsage } from './types'
+import type {
+  Drop,
+  FabricInput,
+  FabricStock,
+  FabricUsage,
+  NewStockIn,
+  NewUsage,
+  StockIn,
+} from './types'
 
 const KEYS = {
   stock: ['stock'] as const,
-  lots: ['lots'] as const,
+  stockIn: ['stock-in'] as const,
   usage: ['usage'] as const,
   drops: ['drops'] as const,
 }
@@ -16,7 +24,6 @@ export function useStock() {
       const { data, error } = await supabase
         .from('fabric_stock')
         .select('*')
-        .order('purchase_date', { ascending: false })
         .order('created_at', { ascending: false })
       if (error) throw new Error(error.message)
       return (data ?? []) as FabricStock[]
@@ -24,17 +31,17 @@ export function useStock() {
   })
 }
 
-export function useLots() {
+export function useStockIn() {
   return useQuery({
-    queryKey: KEYS.lots,
-    queryFn: async (): Promise<FabricLot[]> => {
+    queryKey: KEYS.stockIn,
+    queryFn: async (): Promise<StockIn[]> => {
       const { data, error } = await supabase
-        .from('fabric_lots')
-        .select('*')
-        .order('purchase_date', { ascending: false })
+        .from('fabric_stock_in')
+        .select('*, fabric_lots(fabric_name, color)')
+        .order('entry_date', { ascending: false })
         .order('created_at', { ascending: false })
       if (error) throw new Error(error.message)
-      return (data ?? []) as FabricLot[]
+      return (data ?? []) as unknown as StockIn[]
     },
   })
 }
@@ -45,7 +52,7 @@ export function useUsage() {
     queryFn: async (): Promise<FabricUsage[]> => {
       const { data, error } = await supabase
         .from('fabric_usage')
-        .select('*, fabric_lots(lot_code, fabric_name, color, rate_per_meter)')
+        .select('*, fabric_lots(fabric_name, color)')
         .order('usage_date', { ascending: false })
         .order('created_at', { ascending: false })
       if (error) throw new Error(error.message)
@@ -59,7 +66,7 @@ function useRefreshAll() {
   return () =>
     Promise.all([
       queryClient.invalidateQueries({ queryKey: KEYS.stock }),
-      queryClient.invalidateQueries({ queryKey: KEYS.lots }),
+      queryClient.invalidateQueries({ queryKey: KEYS.stockIn }),
       queryClient.invalidateQueries({ queryKey: KEYS.usage }),
     ])
 }
@@ -93,21 +100,24 @@ export function useAddDrop() {
   })
 }
 
-export function useAddLot() {
+/* ---------- Fabrics ---------- */
+
+export function useAddFabric() {
   const refresh = useRefreshAll()
   return useMutation({
-    mutationFn: async (lot: NewLot) => {
-      const { error } = await supabase.from('fabric_lots').insert(lot)
+    mutationFn: async (fabric: FabricInput): Promise<string> => {
+      const { data, error } = await supabase.from('fabric_lots').insert(fabric).select('id').single()
       if (error) throw new Error(error.message)
+      return data.id as string
     },
     onSuccess: refresh,
   })
 }
 
-export function useUpdateLot() {
+export function useUpdateFabric() {
   const refresh = useRefreshAll()
   return useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: NewLot }) => {
+    mutationFn: async ({ id, patch }: { id: string; patch: FabricInput }) => {
       const { error } = await supabase.from('fabric_lots').update(patch).eq('id', id)
       if (error) throw new Error(error.message)
     },
@@ -115,24 +125,64 @@ export function useUpdateLot() {
   })
 }
 
-export function useAddMeters() {
+export function useDeleteFabric() {
   const refresh = useRefreshAll()
   return useMutation({
-    mutationFn: async ({ id, meters, rate }: { id: string; meters: number; rate: number }) => {
-      const { data: lot, error: readError } = await supabase
-        .from('fabric_lots')
-        .select('meters_bought, rate_per_meter')
-        .eq('id', id)
-        .single()
-      if (readError) throw new Error(readError.message)
-      const bought = Number(lot.meters_bought)
-      const total = bought + meters
-      // Keep the rate as the average price paid per meter across both buys.
-      const average = (bought * Number(lot.rate_per_meter) + meters * rate) / total
-      const { error } = await supabase
-        .from('fabric_lots')
-        .update({ meters_bought: total, rate_per_meter: Math.round(average * 100) / 100 })
-        .eq('id', id)
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('fabric_lots').delete().eq('id', id)
+      if (error) {
+        if (error.code === '23503') {
+          throw new Error('This fabric has stock out entries. Delete those first.')
+        }
+        throw new Error(error.message)
+      }
+    },
+    onSuccess: refresh,
+  })
+}
+
+/* ---------- Stock in ---------- */
+
+export function useAddStockIn() {
+  const refresh = useRefreshAll()
+  return useMutation({
+    mutationFn: async (entry: NewStockIn) => {
+      const { error } = await supabase.from('fabric_stock_in').insert(entry)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: refresh,
+  })
+}
+
+export function useUpdateStockIn() {
+  const refresh = useRefreshAll()
+  return useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: NewStockIn }) => {
+      const { error } = await supabase.from('fabric_stock_in').update(patch).eq('id', id)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: refresh,
+  })
+}
+
+export function useDeleteStockIn() {
+  const refresh = useRefreshAll()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('fabric_stock_in').delete().eq('id', id)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: refresh,
+  })
+}
+
+/* ---------- Stock out ---------- */
+
+export function useAddUsage() {
+  const refresh = useRefreshAll()
+  return useMutation({
+    mutationFn: async (usage: NewUsage) => {
+      const { error } = await supabase.from('fabric_usage').insert(usage)
       if (error) throw new Error(error.message)
     },
     onSuccess: refresh,
@@ -144,44 +194,6 @@ export function useUpdateUsage() {
   return useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: NewUsage }) => {
       const { error } = await supabase.from('fabric_usage').update(patch).eq('id', id)
-      if (error) throw new Error(error.message)
-    },
-    onSuccess: refresh,
-  })
-}
-
-export function useSetLotDrop() {
-  const refresh = useRefreshAll()
-  return useMutation({
-    mutationFn: async ({ id, dropId }: { id: string; dropId: string | null }) => {
-      const { error } = await supabase.from('fabric_lots').update({ drop_id: dropId }).eq('id', id)
-      if (error) throw new Error(error.message)
-    },
-    onSuccess: refresh,
-  })
-}
-
-export function useDeleteLot() {
-  const refresh = useRefreshAll()
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('fabric_lots').delete().eq('id', id)
-      if (error) {
-        if (error.code === '23503') {
-          throw new Error('This fabric has usage entries. Delete those first.')
-        }
-        throw new Error(error.message)
-      }
-    },
-    onSuccess: refresh,
-  })
-}
-
-export function useAddUsage() {
-  const refresh = useRefreshAll()
-  return useMutation({
-    mutationFn: async (usage: NewUsage) => {
-      const { error } = await supabase.from('fabric_usage').insert(usage)
       if (error) throw new Error(error.message)
     },
     onSuccess: refresh,

@@ -1,7 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { useDrops, useStock } from '../lib/queries'
-import { meters, plain, rupees, shortDate } from '../lib/format'
+import { useDeleteFabric, useDrops, useStock } from '../lib/queries'
+import { FabricDrawer } from '../components/FabricDrawer'
+import { StockInDrawer } from '../components/StockInDrawer'
+import type { FabricStock } from '../lib/types'
+import { meters, plain, rupees } from '../lib/format'
 import {
   Badge,
   Card,
@@ -14,8 +17,10 @@ import {
   Th,
   Thumb,
   filterClass,
+  dangerLink,
   linkButton,
   primaryButton,
+  subtleButton,
 } from '../components/ui'
 
 type PurposeFilter = 'all' | 'sample' | 'production'
@@ -26,6 +31,20 @@ export function StockPage() {
   const [search, setSearch] = useState('')
   const [purpose, setPurpose] = useState<PurposeFilter>('all')
   const [dropId, setDropId] = useState('all')
+  const deleteFabric = useDeleteFabric()
+  const [fabricOpen, setFabricOpen] = useState(false)
+  const [editFabric, setEditFabric] = useState<FabricStock | null>(null)
+  const [stockInFor, setStockInFor] = useState<string | null | undefined>(undefined)
+
+  function openFabric(f: FabricStock | null) {
+    setEditFabric(f)
+    setFabricOpen(true)
+  }
+
+  function onDelete(f: FabricStock) {
+    if (!window.confirm(`Delete ${f.fabric_name} and all its stock in entries? This cannot be undone.`)) return
+    deleteFabric.mutate(f.id)
+  }
 
   const dropName = (id: string | null | undefined) => drops.data?.find((d) => d.id === id)?.name
 
@@ -63,9 +82,9 @@ export function StockPage() {
   }, [rows, search, purpose])
 
   const summary = [
-    { label: 'Bought', value: meters(totals.bought) },
-    { label: 'Cut for samples', value: meters(totals.sample) },
-    { label: 'Cut for kurtis', value: meters(totals.actual) },
+    { label: 'Stock in', value: meters(totals.bought) },
+    { label: 'Out for samples', value: meters(totals.sample) },
+    { label: 'Out for kurtis', value: meters(totals.actual) },
     { label: 'Wastage', value: meters(totals.wastage) },
     { label: 'Stock value', value: rupees(totals.value) },
   ]
@@ -74,12 +93,17 @@ export function StockPage() {
     <>
       <PageHeader
         title="Fabric stock"
-        subtitle="What you bought, what has been cut, and what is still on the shelf."
+        subtitle="Each fabric is one record. Stock in adds meters, stock out takes them away."
         action={
-          <Link to="/lots" className={primaryButton}>
-            <Icon name="plus" className="h-4 w-4" />
-            Add purchase
-          </Link>
+          <div className="flex gap-3">
+            <button type="button" className={subtleButton} onClick={() => setStockInFor(null)}>
+              Stock in
+            </button>
+            <button type="button" className={primaryButton} onClick={() => openFabric(null)}>
+              <Icon name="plus" className="h-4 w-4" />
+              Add fabric
+            </button>
+          </div>
         }
       />
 
@@ -147,14 +171,14 @@ export function StockPage() {
             title={allRows.length === 0 ? 'No fabric recorded yet' : 'Nothing matches these filters'}
             body={
               allRows.length === 0
-                ? 'Add your first purchase to start tracking meters.'
+                ? 'Add your first fabric, then record the meters you bought as stock in.'
                 : 'Try clearing the search or filters.'
             }
             action={
               allRows.length === 0 ? (
-                <Link to="/lots" className={primaryButton}>
-                  Add purchase
-                </Link>
+                <button type="button" className={primaryButton} onClick={() => openFabric(null)}>
+                  Add fabric
+                </button>
               ) : undefined
             }
           />
@@ -170,7 +194,7 @@ export function StockPage() {
                   <Th />
                   <Th>Fabric</Th>
                   <Th>Drop</Th>
-                  <Th align="right">Bought</Th>
+                  <Th align="right">Stock in</Th>
                   <Th align="right">Samples</Th>
                   <Th align="right">Kurtis</Th>
                   <Th align="right">Wastage</Th>
@@ -190,7 +214,7 @@ export function StockPage() {
                       <Td>
                         <p className="font-semibold text-ink">{r.fabric_name}</p>
                         <p className="text-xs text-stone-500">
-                          {[r.color, r.supplier, shortDate(r.purchase_date)].filter(Boolean).join(', ')}
+                          {r.color || 'No color'}
                         </p>
                       </Td>
                       <Td>{drop ? <Badge tone="maroon">{drop}</Badge> : <span className="text-stone-400">-</span>}</Td>
@@ -202,15 +226,18 @@ export function StockPage() {
                         {plain(left)} m
                       </Td>
                       <Td align="right" className="whitespace-nowrap">
-                        <Link to="/usage" search={{ lot: r.id }} className={`${linkButton} mr-4`}>
-                          Log usage
+                        <button type="button" className={`${linkButton} mr-4`} onClick={() => setStockInFor(r.id)}>
+                          Stock in
+                        </button>
+                        <Link to="/out" search={{ lot: r.id }} className={`${linkButton} mr-4`}>
+                          Stock out
                         </Link>
-                        <Link to="/lots" search={{ restock: r.id }} className={`${linkButton} mr-4`}>
-                          Add meters
-                        </Link>
-                        <Link to="/lots" search={{ edit: r.id }} className="text-sm text-stone-500 hover:text-ink">
+                        <button type="button" className="mr-4 text-sm text-stone-500 hover:text-ink" onClick={() => openFabric(r)}>
                           Edit
-                        </Link>
+                        </button>
+                        <button type="button" className={dangerLink} onClick={() => onDelete(r)}>
+                          Delete
+                        </button>
                       </Td>
                     </tr>
                   )
@@ -220,6 +247,15 @@ export function StockPage() {
           </div>
         </Card>
       ) : null}
+      {deleteFabric.error ? <div className="mt-4"><ErrorNote message={deleteFabric.error.message} /></div> : null}
+
+      <FabricDrawer open={fabricOpen} fabric={editFabric} onClose={() => setFabricOpen(false)} />
+      <StockInDrawer
+        open={stockInFor !== undefined}
+        entry={null}
+        fabricId={stockInFor ?? undefined}
+        onClose={() => setStockInFor(undefined)}
+      />
     </>
   )
 }

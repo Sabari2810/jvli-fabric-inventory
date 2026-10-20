@@ -5,8 +5,8 @@ import { Icon, Loading } from './ui'
 
 const items = [
   { to: '/', label: 'Stock', icon: 'stock', exact: true },
-  { to: '/lots', label: 'Purchases', icon: 'purchase', exact: false },
-  { to: '/usage', label: 'Usage', icon: 'cut', exact: false },
+  { to: '/in', label: 'Stock in', icon: 'purchase', exact: false },
+  { to: '/out', label: 'Stock out', icon: 'cut', exact: false },
 ] as const
 
 const sideLink =

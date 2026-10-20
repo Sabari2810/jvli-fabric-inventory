@@ -1,0 +1,161 @@
+import { useEffect, useState, type FormEvent } from 'react'
+import { useAddStockIn, useStock, useUpdateStockIn } from '../lib/queries'
+import { plain, todayISO } from '../lib/format'
+import type { Purpose, StockIn } from '../lib/types'
+import { Drawer, ErrorNote, Field, inputClass, primaryButton, subtleButton } from './ui'
+
+/** Add a stock in entry (entry = null), optionally for a fabric, or edit an existing entry. */
+export function StockInDrawer({
+  open,
+  entry,
+  fabricId,
+  onClose,
+}: {
+  open: boolean
+  entry: StockIn | null
+  fabricId?: string
+  onClose: () => void
+}) {
+  const stock = useStock()
+  const addEntry = useAddStockIn()
+  const updateEntry = useUpdateStockIn()
+
+  const [lotId, setLotId] = useState('')
+  const [date, setDate] = useState(todayISO())
+  const [meterValue, setMeterValue] = useState('')
+  const [rate, setRate] = useState('')
+  const [supplier, setSupplier] = useState('')
+  const [purpose, setPurpose] = useState<Purpose>('production')
+  const [notes, setNotes] = useState('')
+  const [error, setError] = useState<string | null>(null)
+
+  const fabrics = stock.data ?? []
+
+  useEffect(() => {
+    if (!open) return
+    const lastSupplier = fabrics.find((f) => f.id === (entry?.lot_id ?? fabricId))?.supplier
+    setLotId(entry?.lot_id ?? fabricId ?? '')
+    setDate(entry?.entry_date ?? todayISO())
+    setMeterValue(entry ? String(entry.meters) : '')
+    setRate(entry ? String(entry.rate_per_meter) : '')
+    setSupplier(entry?.supplier ?? lastSupplier ?? '')
+    setPurpose(entry?.purpose ?? 'production')
+    setNotes(entry?.notes ?? '')
+    setError(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, entry, fabricId])
+
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault()
+    setError(null)
+    const m = Number(meterValue)
+    if (!lotId) return setError('Pick the fabric.')
+    if (!Number.isFinite(m) || m <= 0) return setError('Meters must be more than 0.')
+    const payload = {
+      lot_id: lotId,
+      entry_date: date,
+      meters: m,
+      rate_per_meter: Number(rate) || 0,
+      supplier: supplier.trim() || null,
+      purpose,
+      notes: notes.trim() || null,
+    }
+    try {
+      if (entry) await updateEntry.mutateAsync({ id: entry.id, patch: payload })
+      else await addEntry.mutateAsync(payload)
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save the stock in entry.')
+    }
+  }
+
+  const saving = addEntry.isPending || updateEntry.isPending
+  const selected = fabrics.find((f) => f.id === lotId)
+
+  return (
+    <Drawer open={open} title={entry ? 'Edit stock in' : 'Stock in'} onClose={onClose}>
+      <form onSubmit={onSubmit} className="space-y-5">
+        <Field
+          label="Fabric"
+          hint={selected ? `${plain(selected.meters_left)} m on the shelf now` : 'Add the fabric on the Stock page first.'}
+        >
+          <select
+            required
+            className={inputClass}
+            value={lotId}
+            onChange={(e) => setLotId(e.target.value)}
+            disabled={!!entry}
+          >
+            <option value="">Select a fabric</option>
+            {fabrics.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.fabric_name}
+                {f.color ? `, ${f.color}` : ''}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Bought for">
+            <select className={inputClass} value={purpose} onChange={(e) => setPurpose(e.target.value as Purpose)}>
+              <option value="production">Production</option>
+              <option value="sample">Sample</option>
+            </select>
+          </Field>
+          <Field label="Date">
+            <input type="date" required className={inputClass} value={date} onChange={(e) => setDate(e.target.value)} />
+          </Field>
+          <Field label="Meters">
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              required
+              autoFocus
+              className={inputClass}
+              value={meterValue}
+              onChange={(e) => setMeterValue(e.target.value)}
+            />
+          </Field>
+          <Field label="Rate per meter (INR)">
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              className={inputClass}
+              value={rate}
+              onChange={(e) => setRate(e.target.value)}
+            />
+          </Field>
+        </div>
+        <Field label="Supplier">
+          <input
+            placeholder="Supplier name"
+            className={inputClass}
+            value={supplier}
+            onChange={(e) => setSupplier(e.target.value)}
+          />
+        </Field>
+        <Field label="Notes">
+          <input
+            placeholder="Bill number"
+            className={inputClass}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+        </Field>
+        <ErrorNote message={error} />
+        <div className="flex gap-3 border-t border-stone-100 pt-5">
+          <button type="submit" disabled={saving} className={primaryButton}>
+            {saving ? 'Saving' : entry ? 'Save changes' : 'Add stock in'}
+          </button>
+          <button type="button" className={subtleButton} onClick={onClose}>
+            Cancel
+          </button>
+        </div>
+      </form>
+    </Drawer>
+  )
+}
