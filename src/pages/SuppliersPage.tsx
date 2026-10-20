@@ -171,8 +171,6 @@ export function SuppliersPage() {
                     <IconButton icon="trash" label="Delete supplier" danger onClick={() => onDelete(s)} />
                   </div>
                 ) : null}
-                  ) : null}
-                </div>
               </MobileItem>
             )
           })}
