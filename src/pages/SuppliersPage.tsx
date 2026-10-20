@@ -141,7 +141,7 @@ export function SuppliersPage() {
                     <Link
                       to="/suppliers/$supplierId"
                       params={{ supplierId: s.id }}
-                      className="block font-display text-lg font-semibold leading-snug text-ink hover:text-maroon-900"
+                      className="block font-display text-lg font-semibold leading-snug text-ink after:absolute after:inset-0 hover:text-maroon-900"
                     >
                       {s.name}
                     </Link>
@@ -149,7 +149,7 @@ export function SuppliersPage() {
                       {[s.location, s.phone].filter(Boolean).join(' \u00b7 ') || 'No contact details'}
                     </p>
                     {s.website ? (
-                      <a href={s.website} target="_blank" rel="noreferrer" className={`${linkButton} mt-1 inline-block text-xs`}>
+                      <a href={s.website} target="_blank" rel="noreferrer" className={`${linkButton} relative z-10 mt-1 inline-block text-xs`}>
                         {s.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
                       </a>
                     ) : null}
@@ -161,20 +161,16 @@ export function SuppliersPage() {
                 </div>
                 <Stats
                   items={[
-                    { label: 'Entries', value: t?.entries ?? 0 },
                     { label: 'Meters bought', value: meters(t?.meters ?? 0) },
                     { label: 'Last bought', value: t?.last ? shortDate(t.last) : '-' },
                   ]}
                 />
-                <div className="mt-3 flex items-center justify-between">
-                  <Link to="/suppliers/$supplierId" params={{ supplierId: s.id }} className={linkButton}>
-                    View
-                  </Link>
-                  {canEdit ? (
-                    <div className="flex">
-                      <IconButton icon="edit" label="Edit supplier" onClick={() => openForm(s)} />
-                      <IconButton icon="trash" label="Delete supplier" danger onClick={() => onDelete(s)} />
-                    </div>
+                {canEdit ? (
+                  <div className="relative z-10 mt-3 flex justify-end">
+                    <IconButton icon="edit" label="Edit supplier" onClick={() => openForm(s)} />
+                    <IconButton icon="trash" label="Delete supplier" danger onClick={() => onDelete(s)} />
+                  </div>
+                ) : null}
                   ) : null}
                 </div>
               </MobileItem>
