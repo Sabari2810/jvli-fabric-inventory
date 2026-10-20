@@ -25,14 +25,6 @@ import {
 } from '../components/ui'
 
 type PurposeFilter = 'all' | 'sample' | 'production'
-type SortKey = 'recent' | 'name' | 'left_desc' | 'left_asc'
-
-const sortOptions = [
-  { value: 'recent', label: 'Default order' },
-  { value: 'name', label: 'Name A to Z' },
-  { value: 'left_desc', label: 'Most left' },
-  { value: 'left_asc', label: 'Least left' },
-]
 
 
 export function StockPage() {
@@ -42,7 +34,6 @@ export function StockPage() {
   const [purpose, setPurpose] = useState<PurposeFilter>('all')
   const [dropId, setDropId] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
-  const [sort, setSort] = useState<SortKey>('recent')
   const [sheetOpen, setSheetOpen] = useState(false)
   const [draft, setDraft] = useState({ drop: 'all', type: 'all', purpose: 'all' as PurposeFilter })
   const fabricTypes = useFabricTypes()
@@ -97,11 +88,8 @@ export function StockPage() {
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q))
     })
-    if (sort === 'name') list.sort((a, b) => a.fabric_name.localeCompare(b.fabric_name))
-    else if (sort === 'left_desc') list.sort((a, b) => Number(b.meters_left) - Number(a.meters_left))
-    else if (sort === 'left_asc') list.sort((a, b) => Number(a.meters_left) - Number(b.meters_left))
     return list
-  }, [rows, search, purpose, typeFilter, sort, fabricTypes.data])
+  }, [rows, search, purpose, typeFilter, fabricTypes.data])
 
   const purposeLabel = (p: PurposeFilter) =>
     p === 'sample' ? 'Bought for samples' : p === 'production' ? 'Bought for production' : 'All purposes'
@@ -193,21 +181,21 @@ export function StockPage() {
         </dl>
       </section>
 
-      {/* Phone: search, a Filters sheet, sort and removable chips */}
+      {/* Phone: search with a Filters button, and removable chips */}
       <div className="mb-5 space-y-3 md:hidden">
-        <input
-          type="search"
-          placeholder="Search fabric, color or supplier"
-          className={`${filterClass} w-full`}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <div className="grid grid-cols-2 gap-3">
+        <div className="flex gap-3">
+          <input
+            type="search"
+            placeholder="Search fabric, color or supplier"
+            className={`${filterClass} min-w-0 flex-1`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
           <button
             type="button"
             onClick={openSheet}
-            className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition ${
-              chips.length ? 'bg-maroon-100 text-maroon-900' : 'bg-maroon-50 text-maroon-900'
+            className={`flex shrink-0 items-center justify-center gap-2 rounded-lg px-3.5 py-2.5 text-sm font-semibold text-maroon-900 transition ${
+              chips.length ? 'bg-maroon-100' : 'bg-maroon-50'
             }`}
           >
             <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
@@ -215,7 +203,6 @@ export function StockPage() {
             </svg>
             Filters{chips.length ? ` \u00b7 ${chips.length}` : ''}
           </button>
-          <Combobox value={sort} onChange={(v) => setSort(v as SortKey)} options={sortOptions} ariaLabel="Sort" />
         </div>
         {chips.length ? (
           <div className="flex flex-wrap items-center gap-2">
