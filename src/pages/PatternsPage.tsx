@@ -106,16 +106,54 @@ export function PatternsPage() {
           ) : undefined
         }
       />
-      <Card>
+      {del.error ? (
+        <div className="mb-4">
+          <ErrorNote message={del.error.message} />
+        </div>
+      ) : null}
+
+      {rows.length > 0 ? (
+        <ul className="grid grid-cols-1 gap-3 md:hidden">
+          {rows.map((p) => (
+            <li key={p.id} className="flex gap-4 rounded-2xl border border-stone-200/80 bg-white p-4">
+              <Thumb src={p.image_data} name={p.pattern_no} className="h-28 w-20" />
+              <div className="flex min-w-0 flex-1 flex-col">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-display text-lg font-semibold text-ink">{p.pattern_no}</p>
+                    <p className="text-xs text-stone-500">
+                      Used in {usedIn.get(p.id)?.size ?? 0} {(usedIn.get(p.id)?.size ?? 0) === 1 ? 'drop' : 'drops'}
+                    </p>
+                  </div>
+                  {canEdit ? (
+                    <div className="flex shrink-0">
+                      <IconButton icon="edit" label="Edit pattern" onClick={() => openForm(p)} />
+                      <IconButton icon="trash" label="Delete pattern" danger onClick={() => onDelete(p)} />
+                    </div>
+                  ) : null}
+                </div>
+                <dl className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-stone-200/80 text-center">
+                  <div className="bg-stone-50 py-2">
+                    <dt className="text-xs text-stone-500">Fabric</dt>
+                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums">{p.fabric_usage_m} m</dd>
+                  </div>
+                  <div className="bg-stone-50 py-2">
+                    <dt className="text-xs text-stone-500">Lining</dt>
+                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums">{p.lining_usage_m} m</dd>
+                  </div>
+                </dl>
+                {p.notes ? <p className="mt-2 text-xs text-stone-600">{p.notes}</p> : null}
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <Card className={rows.length > 0 ? 'hidden md:block' : ''}>
         {patterns.isLoading ? <Loading /> : null}
         {patterns.error ? (
           <div className="p-4">
             <ErrorNote message={patterns.error.message} />
-          </div>
-        ) : null}
-        {del.error ? (
-          <div className="p-4">
-            <ErrorNote message={del.error.message} />
           </div>
         ) : null}
         {!patterns.isLoading && !patterns.error && rows.length === 0 ? (
