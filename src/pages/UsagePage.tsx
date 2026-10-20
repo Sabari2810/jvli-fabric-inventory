@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import {
   useAddUsage,
+  useCanEdit,
   useDeleteUsage,
   useStock,
   useUpdateUsage,
@@ -56,6 +57,7 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
   const addUsage = useAddUsage()
   const updateUsage = useUpdateUsage()
   const deleteUsage = useDeleteUsage()
+  const canEdit = useCanEdit()
 
   const [open, setOpen] = useState(!!lotFilter)
   const [editing, setEditing] = useState<FabricUsage | null>(null)
@@ -168,10 +170,12 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
         title="Stock out"
         subtitle="Record fabric each time it is cut, tagged as a sample or a kurti for sale."
         action={
-          <button type="button" className={primaryButton} onClick={startAdd}>
-            <Icon name="plus" className="h-4 w-4" />
-            Stock out
-          </button>
+          canEdit ? (
+            <button type="button" className={primaryButton} onClick={startAdd}>
+              <Icon name="plus" className="h-4 w-4" />
+              Stock out
+            </button>
+          ) : undefined
         }
       />
 
@@ -226,7 +230,7 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
                 : 'Record the first cut and it will appear here.'
             }
             action={
-              lots.length === 0 ? (
+              !canEdit ? undefined : lots.length === 0 ? (
                 <Link to="/" className={primaryButton}>
                   Go to stock
                 </Link>
@@ -274,6 +278,8 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
                       {rupees(Number(u.meters_used) * (rateByFabric.get(u.lot_id) ?? 0))}
                     </Td>
                     <Td align="right" className="whitespace-nowrap">
+                      {canEdit ? (
+                        <>
                       <button type="button" className={`${linkButton} mr-4`} onClick={() => startEdit(u)}>
                         Edit
                       </button>
@@ -285,6 +291,8 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
                       >
                         Delete
                       </button>
+                        </>
+                      ) : null}
                     </Td>
                   </tr>
                 ))}
@@ -294,7 +302,7 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
         ) : null}
       </Card>
 
-      <Drawer open={open} title={editing ? 'Edit stock out' : 'Stock out'} onClose={() => setOpen(false)}>
+      <Drawer open={open && canEdit} title={editing ? 'Edit stock out' : 'Stock out'} onClose={() => setOpen(false)}>
         <form onSubmit={onSubmit} className="space-y-5">
           <Field
             label="Fabric"

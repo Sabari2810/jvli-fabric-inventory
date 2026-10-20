@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { useDrops, useStock, useStockIn, useUsage } from '../lib/queries'
+import { useCanEdit, useDrops, useStock, useStockIn, useUsage } from '../lib/queries'
 import { meters, plain, rupees, shortDate } from '../lib/format'
 import {
   Badge,
@@ -19,6 +19,7 @@ export function FabricDetailPage({ fabricId }: { fabricId: string }) {
   const stockIn = useStockIn()
   const usage = useUsage()
   const drops = useDrops()
+  const canEdit = useCanEdit()
 
   if (stock.isLoading) return <Loading />
   if (stock.error) return <ErrorNote message={stock.error.message} />
@@ -100,7 +101,7 @@ export function FabricDetailPage({ fabricId }: { fabricId: string }) {
       <Card className="mb-8">
         {stockIn.isLoading ? <Loading /> : null}
         {!stockIn.isLoading && ins.length === 0 ? (
-          <EmptyState title="No stock in yet" body="Use Stock in on the stock page to add meters." />
+          <EmptyState title="No stock in yet" body={canEdit ? "Use Stock in on the stock page to add meters." : undefined} />
         ) : null}
         {ins.length > 0 ? (
           <div className="overflow-x-auto">
@@ -146,9 +147,11 @@ export function FabricDetailPage({ fabricId }: { fabricId: string }) {
             title="No stock out yet"
             body="Nothing has been cut from this fabric."
             action={
-              <Link to="/out" search={{ lot: fabricId }} className={linkButton}>
-                Record stock out
-              </Link>
+              canEdit ? (
+                <Link to="/out" search={{ lot: fabricId }} className={linkButton}>
+                  Record stock out
+                </Link>
+              ) : undefined
             }
           />
         ) : null}

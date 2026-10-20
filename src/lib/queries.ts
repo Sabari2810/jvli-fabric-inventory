@@ -274,3 +274,17 @@ export function useDeleteUsage() {
     onSuccess: refresh,
   })
 }
+
+/** True once we know the signed-in user is allowed to change data (view-only users are not). */
+export function useCanEdit(): boolean {
+  const { data } = useQuery({
+    queryKey: ['viewer'],
+    staleTime: Infinity,
+    queryFn: async (): Promise<boolean> => {
+      const { data: row, error } = await supabase.from('viewer_users').select('user_id').maybeSingle()
+      if (error) throw new Error(error.message)
+      return !!row
+    },
+  })
+  return data === false
+}

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { useDeleteFabric, useDrops, useStock } from '../lib/queries'
+import { useCanEdit, useDeleteFabric, useDrops, useStock } from '../lib/queries'
 import { Combobox } from '../components/Combobox'
 import { FabricDrawer } from '../components/FabricDrawer'
 import { StockInDrawer } from '../components/StockInDrawer'
@@ -33,6 +33,7 @@ export function StockPage() {
   const [purpose, setPurpose] = useState<PurposeFilter>('all')
   const [dropId, setDropId] = useState('all')
   const deleteFabric = useDeleteFabric()
+  const canEdit = useCanEdit()
   const [fabricOpen, setFabricOpen] = useState(false)
   const [editFabric, setEditFabric] = useState<FabricStock | null>(null)
   const [stockInFor, setStockInFor] = useState<string | null | undefined>(undefined)
@@ -96,6 +97,7 @@ export function StockPage() {
         title="Fabric stock"
         subtitle="Each fabric is one record. Stock in adds meters, stock out takes them away."
         action={
+          canEdit ? (
           <div className="flex gap-3">
             <button type="button" className={subtleButton} onClick={() => setStockInFor(null)}>
               Stock in
@@ -105,6 +107,7 @@ export function StockPage() {
               Add fabric
             </button>
           </div>
+          ) : undefined
         }
       />
 
@@ -174,7 +177,7 @@ export function StockPage() {
                 : 'Try clearing the search or filters.'
             }
             action={
-              allRows.length === 0 ? (
+              allRows.length === 0 && canEdit ? (
                 <button type="button" className={primaryButton} onClick={() => openFabric(null)}>
                   Add fabric
                 </button>
@@ -227,6 +230,8 @@ export function StockPage() {
                         {plain(left)} m
                       </Td>
                       <Td align="right" className="whitespace-nowrap">
+                        {canEdit ? (
+                          <>
                         <button type="button" className={`${linkButton} mr-4`} onClick={() => setStockInFor(r.id)}>
                           Stock in
                         </button>
@@ -239,6 +244,8 @@ export function StockPage() {
                         <button type="button" className={dangerLink} onClick={() => onDelete(r)}>
                           Delete
                         </button>
+                          </>
+                        ) : null}
                       </Td>
                     </tr>
                   )
@@ -250,6 +257,8 @@ export function StockPage() {
       ) : null}
       {deleteFabric.error ? <div className="mt-4"><ErrorNote message={deleteFabric.error.message} /></div> : null}
 
+      {canEdit ? (
+        <>
       <FabricDrawer open={fabricOpen} fabric={editFabric} onClose={() => setFabricOpen(false)} />
       <StockInDrawer
         open={stockInFor !== undefined}
@@ -257,6 +266,8 @@ export function StockPage() {
         fabricId={stockInFor ?? undefined}
         onClose={() => setStockInFor(undefined)}
       />
+        </>
+      ) : null}
     </>
   )
 }

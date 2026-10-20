@@ -214,3 +214,23 @@ alter table public.suppliers enable row level security;
 create policy "suppliers: authenticated full access" on public.suppliers for all to authenticated using (true) with check (true);
 revoke all on public.suppliers from anon;
 grant select, insert, update, delete on public.suppliers to authenticated;
+
+-- View-only users: add a row to viewer_users for a user and the database blocks all their writes
+-- (restrictive policies on every table); the app also hides the edit buttons for them.
+create table if not exists public.viewer_users (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+alter table public.viewer_users enable row level security;
+create policy "viewers: read own row" on public.viewer_users for select to authenticated using (user_id = auth.uid());
+revoke all on public.viewer_users from anon;
+revoke insert, update, delete on public.viewer_users from authenticated;
+grant select on public.viewer_users to authenticated;
+create or replace function public.is_viewer()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.viewer_users where user_id = auth.uid());
+$$;
+revoke all on function public.is_viewer() from public, anon;
+grant execute on function public.is_viewer() to authenticated;
+-- plus, for each of fabric_lots, fabric_usage, fabric_stock_in, drops, suppliers: restrictive
+-- insert / update / delete policies with (not public.is_viewer()).

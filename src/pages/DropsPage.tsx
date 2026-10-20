@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { Link } from '@tanstack/react-router'
-import { useAddDrop, useDeleteDrop, useDrops, useRenameDrop, useStock } from '../lib/queries'
+import { useAddDrop, useCanEdit, useDeleteDrop, useDrops, useRenameDrop, useStock } from '../lib/queries'
 import { meters, rupees } from '../lib/format'
 import {
   Card,
@@ -27,6 +27,7 @@ export function DropsPage() {
   const addDrop = useAddDrop()
   const renameDrop = useRenameDrop()
   const deleteDrop = useDeleteDrop()
+  const canEdit = useCanEdit()
 
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Drop | null>(null)
@@ -91,10 +92,12 @@ export function DropsPage() {
         title="Drops"
         subtitle="Group fabrics by launch and see the total for each."
         action={
-          <button type="button" className={primaryButton} onClick={startAdd}>
-            <Icon name="plus" className="h-4 w-4" />
-            New drop
-          </button>
+          canEdit ? (
+            <button type="button" className={primaryButton} onClick={startAdd}>
+              <Icon name="plus" className="h-4 w-4" />
+              New drop
+            </button>
+          ) : undefined
         }
       />
 
@@ -115,9 +118,11 @@ export function DropsPage() {
             title="No drops yet"
             body="Create a drop like October Drop, then assign fabrics to it when you edit them."
             action={
-              <button type="button" className={primaryButton} onClick={startAdd}>
-                New drop
-              </button>
+              canEdit ? (
+                <button type="button" className={primaryButton} onClick={startAdd}>
+                  New drop
+                </button>
+              ) : undefined
             }
           />
         ) : null}
@@ -160,6 +165,8 @@ export function DropsPage() {
                         <Link to="/drops/$dropId" params={{ dropId: d.id }} className={`${linkButton} mr-4`}>
                           View
                         </Link>
+                        {canEdit ? (
+                          <>
                         <button
                           type="button"
                           className="mr-4 text-sm text-stone-500 hover:text-ink"
@@ -170,6 +177,8 @@ export function DropsPage() {
                         <button type="button" className={dangerLink} onClick={() => onDelete(d)}>
                           Delete
                         </button>
+                          </>
+                        ) : null}
                       </Td>
                     </tr>
                   )
@@ -180,7 +189,7 @@ export function DropsPage() {
         ) : null}
       </Card>
 
-      <Drawer open={open} title={editing ? 'Rename drop' : 'New drop'} onClose={() => setOpen(false)}>
+      <Drawer open={open && canEdit} title={editing ? 'Rename drop' : 'New drop'} onClose={() => setOpen(false)}>
         <form onSubmit={onSubmit} className="space-y-5">
           <Field label="Drop name">
             <input

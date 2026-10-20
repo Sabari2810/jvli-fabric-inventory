@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useDeleteStockIn, useStockIn } from '../lib/queries'
+import { useCanEdit, useDeleteStockIn, useStockIn } from '../lib/queries'
 import { meters, rupees, shortDate } from '../lib/format'
 import type { StockIn } from '../lib/types'
 import { StockInDrawer } from '../components/StockInDrawer'
@@ -21,6 +21,7 @@ import {
 export function StockInPage() {
   const { data, isLoading, error } = useStockIn()
   const deleteEntry = useDeleteStockIn()
+  const canEdit = useCanEdit()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<StockIn | null>(null)
 
@@ -47,10 +48,12 @@ export function StockInPage() {
         title="Stock in"
         subtitle="Every time you buy meters of a fabric. Buy the same fabric again and it adds to the same record."
         action={
-          <button type="button" className={primaryButton} onClick={startAdd}>
-            <Icon name="plus" className="h-4 w-4" />
-            Stock in
-          </button>
+          canEdit ? (
+            <button type="button" className={primaryButton} onClick={startAdd}>
+              <Icon name="plus" className="h-4 w-4" />
+              Stock in
+            </button>
+          ) : undefined
         }
       />
 
@@ -71,9 +74,11 @@ export function StockInPage() {
             title="No stock in yet"
             body="Record the meters you buy against a fabric and they will show up here."
             action={
-              <button type="button" className={primaryButton} onClick={startAdd}>
-                Stock in
-              </button>
+              canEdit ? (
+                <button type="button" className={primaryButton} onClick={startAdd}>
+                  Stock in
+                </button>
+              ) : undefined
             }
           />
         ) : null}
@@ -112,6 +117,8 @@ export function StockInPage() {
                       {rupees(Number(e.meters) * Number(e.rate_per_meter))}
                     </Td>
                     <Td align="right" className="whitespace-nowrap">
+                      {canEdit ? (
+                        <>
                       <button type="button" className={`${linkButton} mr-4`} onClick={() => startEdit(e)}>
                         Edit
                       </button>
@@ -123,6 +130,8 @@ export function StockInPage() {
                       >
                         Delete
                       </button>
+                        </>
+                      ) : null}
                     </Td>
                   </tr>
                 ))}
@@ -132,7 +141,7 @@ export function StockInPage() {
         ) : null}
       </Card>
 
-      <StockInDrawer open={open} entry={editing} onClose={() => setOpen(false)} />
+      {canEdit ? <StockInDrawer open={open} entry={editing} onClose={() => setOpen(false)} /> : null}
     </>
   )
 }
