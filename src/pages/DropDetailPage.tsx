@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { useDrops, useStock } from '../lib/queries'
 import { meters, rupees } from '../lib/format'
 import { StylesTab } from '../components/StylesTab'
-import { Card, EmptyState, ErrorNote, Loading, Td, Th, Thumb, linkButton } from '../components/ui'
+import { Card, EmptyState, ErrorNote, Loading, MobileItem, MobileList, Stats, Td, Th, Thumb, linkButton } from '../components/ui'
 
 export function DropDetailPage({ dropId }: { dropId: string }) {
   const drops = useDrops()
@@ -112,7 +112,39 @@ export function DropDetailPage({ dropId }: { dropId: string }) {
       </section>
 
       <h2 className="mb-3 font-display text-xl font-semibold text-ink">Fabrics in this drop</h2>
-      <Card>
+      {fabrics.length > 0 ? (
+        <MobileList>
+          {fabrics.map((f) => (
+            <MobileItem key={f.id}>
+              <div className="flex gap-3">
+                <Thumb src={f.image_data} name={f.fabric_name} className="h-16 w-16" />
+                <div className="min-w-0">
+                  <Link
+                    to="/fabric/$fabricId"
+                    params={{ fabricId: f.id }}
+                    className="block font-semibold leading-snug text-ink hover:text-maroon-900"
+                  >
+                    {f.fabric_name}
+                  </Link>
+                  <p className="mt-0.5 text-xs text-stone-500">{f.color || 'No color'}</p>
+                </div>
+              </div>
+              <Stats
+                items={[
+                  { label: 'Stock in', value: meters(f.meters_bought) },
+                  { label: 'Samples', value: meters(f.meters_sample) },
+                  { label: 'Kurtis', value: meters(f.meters_actual) },
+                  { label: 'Wastage', value: meters(f.meters_wastage) },
+                  { label: 'Left', value: meters(f.meters_left), strong: true },
+                  { label: 'Stock value', value: rupees(Number(f.meters_left) * Number(f.rate_per_meter)) },
+                ]}
+              />
+            </MobileItem>
+          ))}
+        </MobileList>
+      ) : null}
+
+      <Card className={fabrics.length > 0 ? 'hidden md:block' : ''}>
         {fabrics.length === 0 ? (
           <EmptyState
             title="No fabrics in this drop yet"

@@ -10,6 +10,9 @@ import {
   ErrorNote,
   Icon,
   Loading,
+  MobileItem,
+  MobileList,
+  Stats,
   PageHeader,
   Td,
   IconButton,
@@ -56,16 +59,52 @@ export function StockInPage() {
         }
       />
 
-      <Card>
+      {deleteEntry.error ? (
+        <div className="mb-4">
+          <ErrorNote message={deleteEntry.error.message} />
+        </div>
+      ) : null}
+
+      {rows.length > 0 ? (
+        <MobileList>
+          {rows.map((e) => (
+            <MobileItem key={e.id}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-semibold leading-snug text-ink">{e.fabric_lots?.fabric_name ?? '-'}</p>
+                  <p className="mt-0.5 text-xs text-stone-500">
+                    {shortDate(e.entry_date)} · {e.supplier || 'No supplier'}
+                  </p>
+                  <div className="mt-2">
+                    <Badge tone={e.purpose === 'sample' ? 'blue' : 'maroon'}>
+                      {e.purpose === 'sample' ? 'Sample' : 'Production'}
+                    </Badge>
+                  </div>
+                </div>
+                {canEdit ? (
+                  <div className="flex shrink-0">
+                    <IconButton icon="edit" label="Edit stock in" onClick={() => startEdit(e)} />
+                    <IconButton icon="trash" label="Delete stock in" danger disabled={deleteEntry.isPending} onClick={() => onDelete(e)} />
+                  </div>
+                ) : null}
+              </div>
+              <Stats
+                items={[
+                  { label: 'Meters', value: meters(e.meters) },
+                  { label: 'Rate', value: rupees(e.rate_per_meter) },
+                  { label: 'Total', value: rupees(Number(e.meters) * Number(e.rate_per_meter)), strong: true },
+                ]}
+              />
+            </MobileItem>
+          ))}
+        </MobileList>
+      ) : null}
+
+      <Card className={rows.length > 0 ? 'hidden md:block' : ''}>
         {isLoading ? <Loading /> : null}
         {error ? (
           <div className="p-4">
             <ErrorNote message={error.message} />
-          </div>
-        ) : null}
-        {deleteEntry.error ? (
-          <div className="p-4">
-            <ErrorNote message={deleteEntry.error.message} />
           </div>
         ) : null}
         {!isLoading && !error && rows.length === 0 ? (

@@ -18,6 +18,9 @@ import {
   Icon,
   IconButton,
   Loading,
+  MobileItem,
+  MobileList,
+  Stats,
   PageHeader,
   Td,
   Th,
@@ -121,16 +124,70 @@ export function SuppliersPage() {
         }
       />
 
-      <Card>
+      {del.error ? (
+        <div className="mb-4">
+          <ErrorNote message={del.error.message} />
+        </div>
+      ) : null}
+
+      {rows.length > 0 ? (
+        <MobileList>
+          {rows.map((s) => {
+            const t = totals.get(s.name.trim().toLowerCase())
+            return (
+              <MobileItem key={s.id}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <Link
+                      to="/suppliers/$supplierId"
+                      params={{ supplierId: s.id }}
+                      className="block font-display text-lg font-semibold leading-snug text-ink hover:text-maroon-900"
+                    >
+                      {s.name}
+                    </Link>
+                    <p className="mt-0.5 text-xs text-stone-500">
+                      {[s.location, s.phone].filter(Boolean).join(' \u00b7 ') || 'No contact details'}
+                    </p>
+                    {s.website ? (
+                      <a href={s.website} target="_blank" rel="noreferrer" className={`${linkButton} mt-1 inline-block text-xs`}>
+                        {s.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
+                      </a>
+                    ) : null}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-stone-500">Spent</p>
+                    <p className="whitespace-nowrap font-display text-lg font-semibold tabular-nums">{rupees(t?.spent ?? 0)}</p>
+                  </div>
+                </div>
+                <Stats
+                  items={[
+                    { label: 'Entries', value: t?.entries ?? 0 },
+                    { label: 'Meters bought', value: meters(t?.meters ?? 0) },
+                    { label: 'Last bought', value: t?.last ? shortDate(t.last) : '-' },
+                  ]}
+                />
+                <div className="mt-3 flex items-center justify-between">
+                  <Link to="/suppliers/$supplierId" params={{ supplierId: s.id }} className={linkButton}>
+                    View
+                  </Link>
+                  {canEdit ? (
+                    <div className="flex">
+                      <IconButton icon="edit" label="Edit supplier" onClick={() => openForm(s)} />
+                      <IconButton icon="trash" label="Delete supplier" danger onClick={() => onDelete(s)} />
+                    </div>
+                  ) : null}
+                </div>
+              </MobileItem>
+            )
+          })}
+        </MobileList>
+      ) : null}
+
+      <Card className={rows.length > 0 ? 'hidden md:block' : ''}>
         {suppliers.isLoading || stockIn.isLoading ? <Loading /> : null}
         {suppliers.error ? (
           <div className="p-4">
             <ErrorNote message={suppliers.error.message} />
-          </div>
-        ) : null}
-        {del.error ? (
-          <div className="p-4">
-            <ErrorNote message={del.error.message} />
           </div>
         ) : null}
         {!suppliers.isLoading && !suppliers.error && rows.length === 0 ? (

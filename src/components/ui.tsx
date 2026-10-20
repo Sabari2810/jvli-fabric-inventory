@@ -322,3 +322,31 @@ export function IconButton({
     </button>
   )
 }
+
+/** Phone-only list of cards that stands in for a table (tables show from md up). */
+export function MobileList({ children }: { children: ReactNode }) {
+  return <ul className="space-y-3 md:hidden">{children}</ul>
+}
+
+export function MobileItem({ children }: { children: ReactNode }) {
+  return <li className="rounded-2xl border border-stone-200/80 bg-white p-4">{children}</li>
+}
+
+/** A small row of labelled figures inside a card. `strong` tints the last figure. */
+export function Stats({ items }: { items: { label: string; value: ReactNode; strong?: boolean }[] }) {
+  const cols = items.length >= 4 ? 'grid-cols-2' : items.length === 3 ? 'grid-cols-3' : 'grid-cols-2'
+  return (
+    <dl className={`mt-3 grid ${cols} gap-px overflow-hidden rounded-xl bg-stone-200/80 text-center`}>
+      {items.map((i) => (
+        <div key={i.label} className={`py-2.5 ${i.strong ? 'bg-maroon-50' : 'bg-stone-50'}`}>
+          <dt className={`text-xs ${i.strong ? 'text-maroon-900/70' : 'text-stone-500'}`}>{i.label}</dt>
+          <dd
+            className={`whitespace-nowrap text-sm font-semibold tabular-nums ${i.strong ? 'text-maroon-900' : 'text-ink'}`}
+          >
+            {i.value}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  )
+}

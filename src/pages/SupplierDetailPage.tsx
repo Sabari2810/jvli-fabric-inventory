@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useStockIn, useSuppliers } from '../lib/queries'
 import { meters, rupees, shortDate } from '../lib/format'
-import { Badge, Card, EmptyState, ErrorNote, Loading, Td, Th, linkButton } from '../components/ui'
+import { Badge, Card, EmptyState, ErrorNote, Loading, MobileItem, MobileList, Stats, Td, Th, linkButton } from '../components/ui'
 
 export function SupplierDetailPage({ supplierId }: { supplierId: string }) {
   const suppliers = useSuppliers()
@@ -84,7 +84,36 @@ export function SupplierDetailPage({ supplierId }: { supplierId: string }) {
       </dl>
 
       <h2 className="mb-3 font-display text-xl font-semibold text-ink">Stock in from this supplier</h2>
-      <Card>
+      {entries.length > 0 ? (
+        <MobileList>
+          {entries.map((e) => (
+            <MobileItem key={e.id}>
+              <Link
+                to="/fabric/$fabricId"
+                params={{ fabricId: e.lot_id }}
+                className="font-semibold leading-snug text-ink hover:text-maroon-900"
+              >
+                {e.fabric_lots?.fabric_name ?? '-'}
+              </Link>
+              <p className="mt-0.5 text-xs text-stone-500">{shortDate(e.entry_date)}</p>
+              <div className="mt-2">
+                <Badge tone={e.purpose === 'sample' ? 'blue' : 'maroon'}>
+                  {e.purpose === 'sample' ? 'Sample' : 'Production'}
+                </Badge>
+              </div>
+              <Stats
+                items={[
+                  { label: 'Meters', value: meters(e.meters) },
+                  { label: 'Rate', value: rupees(e.rate_per_meter) },
+                  { label: 'Total', value: rupees(Number(e.meters) * Number(e.rate_per_meter)), strong: true },
+                ]}
+              />
+            </MobileItem>
+          ))}
+        </MobileList>
+      ) : null}
+
+      <Card className={entries.length > 0 ? 'hidden md:block' : ''}>
         {entries.length === 0 ? (
           <EmptyState title="Nothing bought yet" body="Stock in entries that name this supplier will show up here." />
         ) : (

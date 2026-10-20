@@ -7,6 +7,9 @@ import {
   EmptyState,
   ErrorNote,
   Loading,
+  MobileItem,
+  MobileList,
+  Stats,
   TapeBar,
   Td,
   Th,
@@ -107,7 +110,32 @@ export function FabricDetailPage({ fabricId }: { fabricId: string }) {
       </dl>
 
       <h2 className="mb-3 font-display text-xl font-semibold text-ink">Stock in</h2>
-      <Card className="mb-8">
+      {ins.length > 0 ? (
+        <div className="mb-8">
+          <MobileList>
+            {ins.map((e) => (
+              <MobileItem key={e.id}>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-semibold text-ink">{shortDate(e.entry_date)}</p>
+                  <Badge tone={e.purpose === 'sample' ? 'blue' : 'maroon'}>
+                    {e.purpose === 'sample' ? 'Sample' : 'Production'}
+                  </Badge>
+                </div>
+                <p className="mt-0.5 text-xs text-stone-500">{e.supplier || 'No supplier'}</p>
+                <Stats
+                  items={[
+                    { label: 'Meters', value: meters(e.meters) },
+                    { label: 'Rate', value: rupees(e.rate_per_meter) },
+                    { label: 'Total', value: rupees(Number(e.meters) * Number(e.rate_per_meter)), strong: true },
+                  ]}
+                />
+              </MobileItem>
+            ))}
+          </MobileList>
+        </div>
+      ) : null}
+
+      <Card className={`mb-8 ${ins.length > 0 ? 'hidden md:block' : ''}`}>
         {stockIn.isLoading ? <Loading /> : null}
         {!stockIn.isLoading && ins.length === 0 ? (
           <EmptyState title="No stock in yet" body={canEdit ? "Use Stock in on the stock page to add meters." : undefined} />
@@ -149,7 +177,29 @@ export function FabricDetailPage({ fabricId }: { fabricId: string }) {
       </Card>
 
       <h2 className="mb-3 font-display text-xl font-semibold text-ink">Stock out</h2>
-      <Card>
+      {outs.length > 0 ? (
+        <MobileList>
+          {outs.map((u) => (
+            <MobileItem key={u.id}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-semibold text-ink">{shortDate(u.usage_date)}</p>
+                <Badge tone={u.usage_type === 'sample' ? 'blue' : 'green'}>
+                  {u.usage_type === 'sample' ? 'Sample' : 'Kurti'}
+                </Badge>
+              </div>
+              <p className="mt-0.5 text-xs text-stone-500">{u.design_code || 'No design'}</p>
+              <Stats
+                items={[
+                  { label: 'Used', value: `${plain(u.meters_used)} m` },
+                  { label: 'Wastage', value: `${plain(u.wastage_meters)} m` },
+                ]}
+              />
+            </MobileItem>
+          ))}
+        </MobileList>
+      ) : null}
+
+      <Card className={outs.length > 0 ? 'hidden md:block' : ''}>
         {usage.isLoading ? <Loading /> : null}
         {!usage.isLoading && outs.length === 0 ? (
           <EmptyState

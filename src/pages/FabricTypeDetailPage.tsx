@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useFabricTypes, useStock } from '../lib/queries'
 import { meters, rupees } from '../lib/format'
-import { Card, EmptyState, ErrorNote, Loading, Td, Th, Thumb, linkButton } from '../components/ui'
+import { Card, EmptyState, ErrorNote, Loading, MobileItem, MobileList, Stats, Td, Th, Thumb, linkButton } from '../components/ui'
 
 export function FabricTypeDetailPage({ typeId }: { typeId: string }) {
   const types = useFabricTypes()
@@ -56,7 +56,38 @@ export function FabricTypeDetailPage({ typeId }: { typeId: string }) {
       </dl>
 
       <h2 className="mb-3 font-display text-xl font-semibold text-ink">Fabrics of this type</h2>
-      <Card>
+      {fabrics.length > 0 ? (
+        <MobileList>
+          {fabrics.map((f) => (
+            <MobileItem key={f.id}>
+              <div className="flex gap-3">
+                <Thumb src={f.image_data} name={f.fabric_name} className="h-16 w-16" />
+                <div className="min-w-0">
+                  <Link
+                    to="/fabric/$fabricId"
+                    params={{ fabricId: f.id }}
+                    className="block font-semibold leading-snug text-ink hover:text-maroon-900"
+                  >
+                    {f.fabric_name}
+                  </Link>
+                  <p className="mt-0.5 text-xs text-stone-500">
+                    {[f.color, f.width_inches ? `${f.width_inches} in` : null].filter(Boolean).join(', ') || 'No color'}
+                  </p>
+                </div>
+              </div>
+              <Stats
+                items={[
+                  { label: 'Stock in', value: meters(f.meters_bought) },
+                  { label: 'Left', value: meters(f.meters_left), strong: true },
+                  { label: 'Avg rate', value: rupees(f.rate_per_meter) },
+                ]}
+              />
+            </MobileItem>
+          ))}
+        </MobileList>
+      ) : null}
+
+      <Card className={fabrics.length > 0 ? 'hidden md:block' : ''}>
         {fabrics.length === 0 ? (
           <EmptyState title="No fabrics yet" body="Set this type on a fabric from the Stock page." />
         ) : (

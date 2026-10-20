@@ -19,6 +19,9 @@ import {
   Icon,
   IconButton,
   Loading,
+  MobileItem,
+  MobileList,
+  Stats,
   PageHeader,
   Td,
   Th,
@@ -98,16 +101,54 @@ export function FabricTypesPage() {
           ) : undefined
         }
       />
-      <Card>
+      {del.error ? (
+        <div className="mb-4">
+          <ErrorNote message={del.error.message} />
+        </div>
+      ) : null}
+
+      {rows.length > 0 ? (
+        <MobileList>
+          {rows.map((t) => {
+            const x = totals.get(t.id)
+            return (
+              <MobileItem key={t.id}>
+                <div className="flex items-center justify-between gap-3">
+                  <Link
+                    to="/fabric-types/$typeId"
+                    params={{ typeId: t.id }}
+                    className="font-display text-lg font-semibold text-ink hover:text-maroon-900"
+                  >
+                    {t.name}
+                  </Link>
+                  {canEdit ? (
+                    <div className="flex shrink-0">
+                      <IconButton icon="edit" label="Rename fabric type" onClick={() => openForm(t)} />
+                      <IconButton icon="trash" label="Delete fabric type" danger onClick={() => onDelete(t)} />
+                    </div>
+                  ) : null}
+                </div>
+                <Stats
+                  items={[
+                    { label: 'Fabrics', value: x?.fabrics ?? 0 },
+                    { label: 'Stock in', value: meters(x?.bought ?? 0) },
+                    { label: 'Left', value: meters(x?.left ?? 0), strong: true },
+                  ]}
+                />
+                <Link to="/fabric-types/$typeId" params={{ typeId: t.id }} className={`${linkButton} mt-3 inline-block`}>
+                  View
+                </Link>
+              </MobileItem>
+            )
+          })}
+        </MobileList>
+      ) : null}
+
+      <Card className={rows.length > 0 ? 'hidden md:block' : ''}>
         {types.isLoading || stock.isLoading ? <Loading /> : null}
         {types.error ? (
           <div className="p-4">
             <ErrorNote message={types.error.message} />
-          </div>
-        ) : null}
-        {del.error ? (
-          <div className="p-4">
-            <ErrorNote message={del.error.message} />
           </div>
         ) : null}
         {!types.isLoading && !types.error && rows.length === 0 ? (

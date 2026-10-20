@@ -20,6 +20,9 @@ import {
   Field,
   Icon,
   Loading,
+  MobileItem,
+  MobileList,
+  Stats,
   PageHeader,
   Td,
   IconButton,
@@ -178,8 +181,8 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
         }
       />
 
-      <Card>
-        <div className="flex flex-wrap items-center gap-3 border-b border-stone-100 p-4">
+      <Card className="max-md:border-0 max-md:bg-transparent">
+        <div className="flex flex-wrap items-center gap-3 border-b border-stone-100 p-4 max-md:px-0">
           <Combobox
             className="w-52"
             value={typeFilter}
@@ -243,7 +246,41 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
         ) : null}
 
         {rows.length > 0 ? (
-          <div className="overflow-x-auto">
+          <MobileList>
+            {rows.map((u) => (
+              <MobileItem key={u.id}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold leading-snug text-ink">{u.fabric_lots?.fabric_name ?? '-'}</p>
+                    <p className="mt-0.5 text-xs text-stone-500">
+                      {shortDate(u.usage_date)} · {u.design_code || 'No design'}
+                    </p>
+                    <div className="mt-2">
+                      <Badge tone={u.usage_type === 'sample' ? 'blue' : 'green'}>
+                        {u.usage_type === 'sample' ? 'Sample' : 'Kurti'}
+                      </Badge>
+                    </div>
+                  </div>
+                  {canEdit ? (
+                    <div className="flex shrink-0">
+                      <IconButton icon="edit" label="Edit stock out" onClick={() => startEdit(u)} />
+                      <IconButton icon="trash" label="Delete stock out" danger disabled={deleteUsage.isPending} onClick={() => onDelete(u.id)} />
+                    </div>
+                  ) : null}
+                </div>
+                <Stats
+                  items={[
+                    { label: 'Used', value: meters(u.meters_used) },
+                    { label: 'Wastage', value: meters(u.wastage_meters) },
+                    { label: 'Cost', value: rupees(Number(u.meters_used) * (rateByFabric.get(u.lot_id) ?? 0)), strong: true },
+                  ]}
+                />
+              </MobileItem>
+            ))}
+          </MobileList>
+        ) : null}
+        {rows.length > 0 ? (
+          <div className="hidden overflow-x-auto md:block">
             <table className="min-w-full divide-y divide-stone-100">
               <thead>
                 <tr>

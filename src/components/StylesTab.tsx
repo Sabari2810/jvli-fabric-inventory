@@ -12,7 +12,7 @@ import { costing } from '../lib/costing'
 import { meters, rupees } from '../lib/format'
 import type { DropStyle } from '../lib/types'
 import { StyleDrawer } from './StyleDrawer'
-import { Card, EmptyState, ErrorNote, Icon, IconButton, Loading, Td, Th, Thumb, primaryButton } from './ui'
+import { Card, EmptyState, ErrorNote, Icon, IconButton, Loading, MobileItem, MobileList, Stats, Td, Th, Thumb, primaryButton } from './ui'
 
 export function StylesTab({ dropId }: { dropId: string }) {
   const styles = useDropStyles()
@@ -90,7 +90,83 @@ export function StylesTab({ dropId }: { dropId: string }) {
         </dl>
       ) : null}
 
-      <Card>
+      {rows.length > 0 ? (
+        <MobileList>
+          {rows.map((s) => {
+            const c = costing(s)
+            const fab = s.fabric_id ? fabricBy.get(s.fabric_id) : undefined
+            const type = s.fabric_type_id ? typeBy.get(s.fabric_type_id) : undefined
+            const pattern = patternBy.get(s.pattern_id)
+            return (
+              <MobileItem key={s.id}>
+                <div className="flex gap-3">
+                  <Thumb src={pattern?.image_data ?? s.reference_image} name="Pattern" className="h-24 w-[4.5rem]" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-display text-lg font-semibold text-ink">{pattern?.pattern_no ?? '-'}</p>
+                      {canEdit ? (
+                        <div className="flex shrink-0">
+                          <IconButton icon="edit" label="Edit style" onClick={() => openForm(s)} />
+                          <IconButton icon="trash" label="Remove style" danger onClick={() => onDelete(s)} />
+                        </div>
+                      ) : null}
+                    </div>
+                    <div className="mt-1 flex items-center gap-2.5">
+                      <Thumb src={s.fabric_image ?? fab?.image_data} name="Swatch" className="h-10 w-10" />
+                      <div className="min-w-0">
+                        {fab ? (
+                          <Link
+                            to="/fabric/$fabricId"
+                            params={{ fabricId: fab.id }}
+                            className="block text-sm font-semibold leading-snug text-ink hover:text-maroon-900"
+                          >
+                            {fab.fabric_name}
+                          </Link>
+                        ) : (
+                          <span className="text-sm text-stone-500">Not linked</span>
+                        )}
+                        <p className="text-xs text-stone-500">
+                          {type?.name ?? 'No type'}
+                          {s.width_inches ? `, ${s.width_inches} in` : ''}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <Stats
+                  items={[
+                    { label: 'Raw material', value: rupees(c.raw) },
+                    { label: 'Calculated', value: rupees(c.mrp) },
+                    { label: 'Final price', value: s.final_price !== null ? rupees(s.final_price) : '-', strong: true },
+                    { label: 'Planned', value: s.planned_qty ?? '-' },
+                  ]}
+                />
+                <details className="mt-3 text-sm">
+                  <summary className="cursor-pointer font-semibold text-maroon-900">Cost breakdown</summary>
+                  <dl className="mt-2 space-y-1.5 text-stone-600">
+                    {[
+                      [`Fabric, ${s.fabric_usage_m} m x ${rupees(s.fabric_rate)}`, rupees(c.fabric)],
+                      [`Lining, ${s.lining_usage_m} m x ${rupees(s.lining_rate)}`, rupees(c.lining)],
+                      ['Stitching', rupees(s.stitching)],
+                      ['Misc', rupees(s.misc)],
+                      ['Profit', rupees(s.profit)],
+                      ['GST', rupees(s.gst)],
+                      ['Shipping', rupees(s.shipping)],
+                    ].map(([k, v]) => (
+                      <div key={k} className="flex justify-between gap-3">
+                        <dt>{k}</dt>
+                        <dd className="whitespace-nowrap font-semibold tabular-nums text-ink">{v}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </details>
+              </MobileItem>
+            )
+          })}
+        </MobileList>
+      ) : null}
+
+      <Card className={rows.length > 0 ? 'hidden md:block' : ''}>
         {rows.length === 0 ? (
           <EmptyState
             title="No styles in this drop yet"
