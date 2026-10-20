@@ -8,7 +8,7 @@ export interface Option {
 }
 
 const triggerBase =
-  'flex w-full items-center justify-between gap-2 rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-left text-sm text-ink transition hover:border-stone-400 focus:border-maroon-900 focus:outline-none focus:ring-4 focus:ring-maroon-900/10 disabled:bg-stone-100 disabled:text-stone-500'
+  'flex items-center justify-between gap-2 rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-left text-sm text-ink transition hover:border-stone-400 focus:border-maroon-900 focus:outline-none focus:ring-4 focus:ring-maroon-900/10 disabled:bg-stone-100 disabled:text-stone-500'
 
 /** A pick list with a search box. Replaces the native select everywhere. */
 export function Combobox({
@@ -16,7 +16,7 @@ export function Combobox({
   onChange,
   options,
   placeholder = 'Select',
-  className = '',
+  className = 'w-full',
   disabled = false,
   ariaLabel,
 }: {
