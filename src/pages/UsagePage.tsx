@@ -22,10 +22,9 @@ import {
   Loading,
   PageHeader,
   Td,
+  IconButton,
   Th,
-  dangerLink,
   inputClass,
-  linkButton,
   primaryButton,
   subtleButton,
 } from '../components/ui'
@@ -280,17 +279,8 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
                     <Td align="right" className="whitespace-nowrap">
                       {canEdit ? (
                         <>
-                      <button type="button" className={`${linkButton} mr-4`} onClick={() => startEdit(u)}>
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className={dangerLink}
-                        disabled={deleteUsage.isPending}
-                        onClick={() => onDelete(u.id)}
-                      >
-                        Delete
-                      </button>
+                      <IconButton icon="edit" label="Edit stock out" onClick={() => startEdit(u)} />
+                      <IconButton icon="trash" label="Delete stock out" danger disabled={deleteUsage.isPending} onClick={() => onDelete(u.id)} />
                         </>
                       ) : null}
                     </Td>

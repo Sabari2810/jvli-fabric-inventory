@@ -15,10 +15,10 @@ import {
   Loading,
   PageHeader,
   Td,
+  IconButton,
   Th,
   Thumb,
   filterClass,
-  dangerLink,
   linkButton,
   primaryButton,
   subtleButton,
@@ -238,12 +238,8 @@ export function StockPage() {
                         <Link to="/out" search={{ lot: r.id }} className={`${linkButton} mr-4`}>
                           Stock out
                         </Link>
-                        <button type="button" className="mr-4 text-sm text-stone-500 hover:text-ink" onClick={() => openFabric(r)}>
-                          Edit
-                        </button>
-                        <button type="button" className={dangerLink} onClick={() => onDelete(r)}>
-                          Delete
-                        </button>
+                        <IconButton icon="edit" label="Edit fabric" onClick={() => openFabric(r)} />
+                        <IconButton icon="trash" label="Delete fabric" danger onClick={() => onDelete(r)} />
                           </>
                         ) : null}
                       </Td>

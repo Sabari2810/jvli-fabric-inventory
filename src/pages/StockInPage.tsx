@@ -12,9 +12,8 @@ import {
   Loading,
   PageHeader,
   Td,
+  IconButton,
   Th,
-  dangerLink,
-  linkButton,
   primaryButton,
 } from '../components/ui'
 
@@ -119,17 +118,8 @@ export function StockInPage() {
                     <Td align="right" className="whitespace-nowrap">
                       {canEdit ? (
                         <>
-                      <button type="button" className={`${linkButton} mr-4`} onClick={() => startEdit(e)}>
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className={dangerLink}
-                        disabled={deleteEntry.isPending}
-                        onClick={() => onDelete(e)}
-                      >
-                        Delete
-                      </button>
+                      <IconButton icon="edit" label="Edit stock in" onClick={() => startEdit(e)} />
+                      <IconButton icon="trash" label="Delete stock in" danger disabled={deleteEntry.isPending} onClick={() => onDelete(e)} />
                         </>
                       ) : null}
                     </Td>

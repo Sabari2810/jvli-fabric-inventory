@@ -12,8 +12,8 @@ import {
   Loading,
   PageHeader,
   Td,
+  IconButton,
   Th,
-  dangerLink,
   inputClass,
   linkButton,
   primaryButton,
@@ -167,16 +167,8 @@ export function DropsPage() {
                         </Link>
                         {canEdit ? (
                           <>
-                        <button
-                          type="button"
-                          className="mr-4 text-sm text-stone-500 hover:text-ink"
-                          onClick={() => startRename(d)}
-                        >
-                          Rename
-                        </button>
-                        <button type="button" className={dangerLink} onClick={() => onDelete(d)}>
-                          Delete
-                        </button>
+                        <IconButton icon="edit" label="Rename drop" onClick={() => startRename(d)} />
+                        <IconButton icon="trash" label="Delete drop" danger onClick={() => onDelete(d)} />
                           </>
                         ) : null}
                       </Td>
