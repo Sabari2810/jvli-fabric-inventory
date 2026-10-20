@@ -81,3 +81,15 @@ input:disabled {
     font-size: 16px !important;
   }
 }
+
+/* While the keyboard is up over a bottom sheet, hide the page behind it so it cannot show through the keyboard */
+@media (max-width: 767px) {
+  html.sheet-keyboard main,
+  html.sheet-keyboard header,
+  html.sheet-keyboard nav {
+    visibility: hidden;
+  }
+  html.sheet-keyboard [role="dialog"] {
+    visibility: visible;
+  }
+}

@@ -23,6 +23,26 @@ export function useVisualViewport(active: boolean): {
     const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
 
+    // iOS draws the page through the translucent keyboard. While a field is focused, hide the
+    // page behind the sheet so nothing from it shows there (see .sheet-keyboard in index.css).
+    const root = document.documentElement
+    const isField = (el: EventTarget | null) =>
+      el instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)
+    let timer: number | undefined
+    const onIn = (e: FocusEvent) => {
+      if (!isField(e.target)) return
+      window.clearTimeout(timer)
+      root.classList.add('sheet-keyboard')
+    }
+    const onOut = () => {
+      window.clearTimeout(timer)
+      timer = window.setTimeout(() => {
+        if (!isField(document.activeElement)) root.classList.remove('sheet-keyboard')
+      }, 120)
+    }
+    document.addEventListener('focusin', onIn)
+    document.addEventListener('focusout', onOut)
+
     const vv = window.visualViewport
     function update() {
       if (!vv) return
@@ -33,6 +53,10 @@ export function useVisualViewport(active: boolean): {
     vv?.addEventListener('scroll', update)
     return () => {
       document.body.style.overflow = previous
+      document.removeEventListener('focusin', onIn)
+      document.removeEventListener('focusout', onOut)
+      window.clearTimeout(timer)
+      root.classList.remove('sheet-keyboard')
       vv?.removeEventListener('resize', update)
       vv?.removeEventListener('scroll', update)
       setBox(null)
