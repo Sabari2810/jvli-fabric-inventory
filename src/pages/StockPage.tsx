@@ -195,8 +195,6 @@ export function StockPage() {
                   <Th>Fabric</Th>
                   <Th>Drop</Th>
                   <Th align="right">Stock in</Th>
-                  <Th align="right">Samples</Th>
-                  <Th align="right">Kurtis</Th>
                   <Th align="right">Wastage</Th>
                   <Th align="right">Left</Th>
                   <Th />
@@ -212,15 +210,19 @@ export function StockPage() {
                         <Thumb src={r.image_data} name={r.fabric_name} />
                       </Td>
                       <Td>
-                        <p className="font-semibold text-ink">{r.fabric_name}</p>
+                        <Link
+                          to="/fabric/$fabricId"
+                          params={{ fabricId: r.id }}
+                          className="font-semibold text-ink underline-offset-4 hover:text-maroon-900 hover:underline"
+                        >
+                          {r.fabric_name}
+                        </Link>
                         <p className="text-xs text-stone-500">
                           {r.color || 'No color'}
                         </p>
                       </Td>
                       <Td>{drop ? <Badge tone="maroon">{drop}</Badge> : <span className="text-stone-400">-</span>}</Td>
                       <Td align="right">{plain(r.meters_bought)} m</Td>
-                      <Td align="right">{plain(r.meters_sample)} m</Td>
-                      <Td align="right">{plain(r.meters_actual)} m</Td>
                       <Td align="right">{plain(r.meters_wastage)} m</Td>
                       <Td align="right" className="font-semibold">
                         {plain(left)} m

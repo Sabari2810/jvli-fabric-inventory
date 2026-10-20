@@ -2,6 +2,7 @@ import { createRootRoute, createRoute, createRouter, Outlet } from '@tanstack/re
 import { AppLayout } from './components/AppLayout'
 import { LoginPage } from './pages/LoginPage'
 import { StockPage } from './pages/StockPage'
+import { FabricDetailPage } from './pages/FabricDetailPage'
 import { StockInPage } from './pages/StockInPage'
 import { UsagePage } from './pages/UsagePage'
 
@@ -32,6 +33,17 @@ const stockInRoute = createRoute({
   component: StockInPage,
 })
 
+const fabricRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/fabric/$fabricId',
+  component: FabricRouteComponent,
+})
+
+function FabricRouteComponent() {
+  const { fabricId } = fabricRoute.useParams()
+  return <FabricDetailPage key={fabricId} fabricId={fabricId} />
+}
+
 const usageRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/out',
@@ -48,7 +60,7 @@ function UsageRouteComponent() {
 
 const routeTree = rootRoute.addChildren([
   loginRoute,
-  appRoute.addChildren([stockRoute, stockInRoute, usageRoute]),
+  appRoute.addChildren([stockRoute, fabricRoute, stockInRoute, usageRoute]),
 ])
 
 export const router = createRouter({ routeTree })
