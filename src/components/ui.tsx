@@ -261,9 +261,9 @@ export function Thumb({
 }
 
 /** A measuring-tape bar: tick marks along a track, filled to the share of fabric left. */
-export function TapeBar({ left, total, tone }: { left: number; total: number; tone: 'ok' | 'low' | 'empty' }) {
+export function TapeBar({ left, total, tone }: { left: number; total: number; tone: 'ok' | 'empty' }) {
   const pct = total > 0 ? Math.max(0, Math.min(100, (left / total) * 100)) : 0
-  const fill = tone === 'low' ? 'bg-saffron' : tone === 'empty' ? 'bg-stone-300' : 'bg-maroon-900'
+  const fill = tone === 'empty' ? 'bg-stone-300' : 'bg-maroon-900'
   return (
     <div
       className="relative h-3 overflow-hidden rounded-sm bg-stone-100"

@@ -50,6 +50,6 @@ export interface Drop {
   created_at: string
 }
 
-export type NewLot = Omit<FabricLot, 'id' | 'lot_code' | 'created_at'>
+export type NewLot = Omit<FabricLot, 'id' | 'lot_code' | 'created_at' | 'low_stock_meters'>
 
 export type NewUsage = Omit<FabricUsage, 'id' | 'created_at' | 'fabric_lots'>

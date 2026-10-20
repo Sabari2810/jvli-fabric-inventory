@@ -39,7 +39,6 @@ interface FormState {
   meters_bought: string
   rate_per_meter: string
   purpose: Purpose
-  low_stock_meters: string
   notes: string
   drop_id: string
 }
@@ -52,7 +51,6 @@ const emptyForm = (): FormState => ({
   meters_bought: '',
   rate_per_meter: '',
   purpose: 'production',
-  low_stock_meters: '5',
   notes: '',
   drop_id: '',
 })
@@ -97,7 +95,6 @@ export function LotsPage({ editId }: { editId?: string }) {
       meters_bought: String(l.meters_bought),
       rate_per_meter: String(l.rate_per_meter),
       purpose: l.purpose,
-      low_stock_meters: String(l.low_stock_meters),
       notes: l.notes ?? '',
       drop_id: l.drop_id ?? '',
     })
@@ -179,7 +176,6 @@ export function LotsPage({ editId }: { editId?: string }) {
         meters_bought: bought,
         rate_per_meter: Number(form.rate_per_meter) || 0,
         purpose: form.purpose,
-        low_stock_meters: Number(form.low_stock_meters) || 0,
         notes: form.notes.trim() || null,
         image_data: image,
         drop_id: form.drop_id || null,
@@ -441,17 +437,6 @@ export function LotsPage({ editId }: { editId?: string }) {
                 New drop
               </button>
             </div>
-          </Field>
-          <Field label="Warn me when meters left drops to" hint="Shows a Running low tag on the stock page.">
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              min="0"
-              className={inputClass}
-              value={form.low_stock_meters}
-              onChange={(e) => set('low_stock_meters', e.target.value)}
-            />
           </Field>
           <Field label="Notes">
             <input

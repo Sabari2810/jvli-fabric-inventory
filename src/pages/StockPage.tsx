@@ -23,7 +23,6 @@ export function StockPage() {
   const drops = useDrops()
   const [search, setSearch] = useState('')
   const [purpose, setPurpose] = useState<PurposeFilter>('all')
-  const [lowOnly, setLowOnly] = useState(false)
   const [dropId, setDropId] = useState('all')
 
   const dropName = (id: string | null | undefined) => drops.data?.find((d) => d.id === id)?.name
@@ -54,13 +53,12 @@ export function StockPage() {
     const q = search.trim().toLowerCase()
     return rows.filter((r) => {
       if (purpose !== 'all' && r.purpose !== purpose) return false
-      if (lowOnly && Number(r.meters_left) > Number(r.low_stock_meters)) return false
       if (!q) return true
       return [r.fabric_name, r.color, r.supplier]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q))
     })
-  }, [rows, search, purpose, lowOnly])
+  }, [rows, search, purpose])
 
   const summary = [
     { label: 'Bought', value: meters(totals.bought) },
@@ -136,18 +134,6 @@ export function StockPage() {
           <option value="sample">Bought for samples</option>
           <option value="production">Bought for production</option>
         </select>
-        <button
-          type="button"
-          onClick={() => setLowOnly((v) => !v)}
-          aria-pressed={lowOnly}
-          className={`rounded-lg border px-3.5 py-2.5 text-sm font-medium transition ${
-            lowOnly
-              ? 'border-maroon-900 bg-maroon-900 text-white'
-              : 'border-stone-300 bg-white text-stone-700 hover:bg-stone-50'
-          }`}
-        >
-          Running low
-        </button>
       </div>
 
       {isLoading ? <Loading /> : null}
@@ -176,9 +162,8 @@ export function StockPage() {
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {filtered.map((r) => {
           const left = Number(r.meters_left)
-          const low = left <= Number(r.low_stock_meters)
           const empty = left <= 0
-          const tone = empty ? 'empty' : low ? 'low' : 'ok'
+          const tone = empty ? 'empty' : 'ok'
           const drop = dropName(r.drop_id)
           return (
             <article
@@ -193,7 +178,7 @@ export function StockPage() {
                 />
                 <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
                   <span>{drop ? <Badge tone="maroon">{drop}</Badge> : null}</span>
-                  {empty ? <Badge tone="neutral">Finished</Badge> : low ? <Badge tone="amber">Running low</Badge> : null}
+                  {empty ? <Badge tone="neutral">Finished</Badge> : null}
                 </div>
               </div>
 
