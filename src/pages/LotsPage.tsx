@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useAddLot, useDeleteLot, useLots } from '../lib/queries'
 import { meters, rupees, shortDate, todayISO } from '../lib/format'
 import { fileToWebpDataUrl } from '../lib/image'
@@ -55,9 +55,7 @@ export function LotsPage() {
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((f) => ({ ...f, [key]: value }))
 
-  async function onPickImage(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
+  async function handleImageFile(file: File) {
     setFormError(null)
     setConverting(true)
     try {
@@ -70,6 +68,27 @@ export function LotsPage() {
       if (fileRef.current) fileRef.current.value = ''
     }
   }
+
+  function onPickImage(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) void handleImageFile(file)
+  }
+
+  // Paste an image from the clipboard anywhere on this page (Ctrl/Cmd+V).
+  const pasteHandler = useRef(handleImageFile)
+  pasteHandler.current = handleImageFile
+  useEffect(() => {
+    function onPaste(e: ClipboardEvent) {
+      const items = Array.from(e.clipboardData?.items ?? [])
+      const item = items.find((i) => i.kind === 'file' && i.type.startsWith('image/'))
+      const file = item?.getAsFile()
+      if (!file) return
+      e.preventDefault()
+      void pasteHandler.current(file)
+    }
+    document.addEventListener('paste', onPaste)
+    return () => document.removeEventListener('paste', onPaste)
+  }, [])
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -194,7 +213,7 @@ export function LotsPage() {
                 onChange={(e) => set('low_stock_meters', e.target.value)}
               />
             </Field>
-            <Field label="Fabric photo" hint="Converted to WebP before saving" className="sm:col-span-2 lg:col-span-4">
+            <Field label="Fabric photo" hint="Choose a file, or paste an image anywhere on this page (Ctrl+V / Cmd+V). Converted to WebP before saving." className="sm:col-span-2 lg:col-span-4">
               <div className="flex items-center gap-4">
                 {image ? (
                   <img src={image} alt="Fabric preview" className="h-16 w-16 rounded-lg border border-stone-200 object-cover" />
