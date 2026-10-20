@@ -119,8 +119,12 @@ export function Drawer({
     if (!root) return
     const y = window.scrollY
     root.style.display = 'none'
+    const html = document.documentElement
+    const bg = html.style.background
+    html.style.background = '#fff'
     window.scrollTo(0, 0)
     return () => {
+      html.style.background = bg
       root.style.display = ''
       window.scrollTo(0, y)
     }

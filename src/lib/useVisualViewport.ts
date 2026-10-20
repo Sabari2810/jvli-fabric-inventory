@@ -46,9 +46,13 @@ export function useVisualViewport(active: boolean): {
     const vv = window.visualViewport
     function update() {
       if (!vv) return
-      setBox({ top: vv.offsetTop, height: vv.height })
+      const top = Math.round(vv.offsetTop)
+      const height = Math.round(vv.height)
+      setBox((b) => (b && b.top === top && b.height === height ? b : { top, height }))
     }
     update()
+    // iOS reports the keyboard size late and sometimes not at all, so keep measuring while open
+    const poll = window.setInterval(update, 100)
     vv?.addEventListener('resize', update)
     vv?.addEventListener('scroll', update)
     return () => {
@@ -57,6 +61,7 @@ export function useVisualViewport(active: boolean): {
       document.removeEventListener('focusout', onOut)
       window.clearTimeout(timer)
       root.classList.remove('sheet-keyboard')
+      window.clearInterval(poll)
       vv?.removeEventListener('resize', update)
       vv?.removeEventListener('scroll', update)
       setBox(null)
