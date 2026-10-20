@@ -255,11 +255,15 @@ export function Thumb({
   name: string
   className?: string
 }) {
+  // Table cells shrink to nothing on narrow screens, so pin the width
+  const w = className.match(/\bw-(\d+)\b/)
+  const pin = w ? { minWidth: `${Number(w[1]) * 0.25}rem` } : undefined
   if (src) {
-    return <img src={src} alt={name} className={`${className} shrink-0 rounded-lg object-cover`} />
+    return <img src={src} alt={name} style={pin} className={`${className} shrink-0 rounded-lg object-cover`} />
   }
   return (
     <div
+      style={pin}
       className={`${className} flex shrink-0 items-center justify-center rounded-lg bg-maroon-50 font-display text-lg font-semibold text-maroon-300`}
       aria-hidden="true"
     >
