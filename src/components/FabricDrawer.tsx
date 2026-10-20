@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useAddDrop, useAddFabric, useDrops, useUpdateFabric } from '../lib/queries'
 import type { FabricStock } from '../lib/types'
 import { Drawer, ErrorNote, Field, inputClass, primaryButton, subtleButton } from './ui'
+import { Combobox } from './Combobox'
 import { PhotoField } from './PhotoField'
 
 /** Create a fabric (open with fabric = null) or edit an existing one. */
@@ -90,14 +91,15 @@ export function FabricDrawer({
         </Field>
         <Field label="Drop" hint="Group this fabric with the others for a launch.">
           <div className="flex gap-2">
-            <select className={inputClass} value={dropId} onChange={(e) => setDropId(e.target.value)}>
-              <option value="">No drop</option>
-              {(drops.data ?? []).map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
+            <Combobox
+              className="min-w-0 flex-1"
+              value={dropId}
+              onChange={setDropId}
+              options={[
+                { value: '', label: 'No drop' },
+                ...(drops.data ?? []).map((d) => ({ value: d.id, label: d.name })),
+              ]}
+            />
             <button type="button" className={`${subtleButton} shrink-0`} onClick={() => void onNewDrop()}>
               New drop
             </button>

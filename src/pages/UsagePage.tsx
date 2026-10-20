@@ -9,6 +9,7 @@ import {
 } from '../lib/queries'
 import { meters, plain, rupees, shortDate, todayISO } from '../lib/format'
 import type { FabricUsage, UsageType } from '../lib/types'
+import { Combobox } from '../components/Combobox'
 import {
   Badge,
   Card,
@@ -22,7 +23,6 @@ import {
   Td,
   Th,
   dangerLink,
-  filterClass,
   inputClass,
   linkButton,
   primaryButton,
@@ -177,16 +177,17 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
 
       <Card>
         <div className="flex flex-wrap items-center gap-3 border-b border-stone-100 p-4">
-          <select
-            className={filterClass}
+          <Combobox
+            className="w-52"
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value as 'all' | UsageType)}
-            aria-label="Filter by type"
-          >
-            <option value="all">Samples and kurtis</option>
-            <option value="sample">Samples only</option>
-            <option value="actual">Kurtis only</option>
-          </select>
+            onChange={(v) => setTypeFilter(v as 'all' | UsageType)}
+            ariaLabel="Filter by type"
+            options={[
+              { value: 'all', label: 'Samples and kurtis' },
+              { value: 'sample', label: 'Samples only' },
+              { value: 'actual', label: 'Kurtis only' },
+            ]}
+          />
           {lotFilter ? (
             <>
               <Badge tone="maroon">Showing {filteredLot ? filteredLot.fabric_name : 'one fabric'}</Badge>
@@ -299,32 +300,28 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
             label="Fabric"
             hint={available !== null ? `${plain(available)} m available` : undefined}
           >
-            <select
-              required
-              className={inputClass}
+            <Combobox
               value={form.lot_id}
-              onChange={(e) => set('lot_id', e.target.value)}
-            >
-              <option value="">Select a fabric</option>
-              {lots.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.fabric_name}
-                  {l.color ? `, ${l.color}` : ''} ({plain(l.meters_left)} m left)
-                </option>
-              ))}
-            </select>
+              onChange={(v) => set('lot_id', v)}
+              placeholder="Select a fabric"
+              options={lots.map((l) => ({
+                value: l.id,
+                label: `${l.fabric_name}${l.color ? `, ${l.color}` : ''}`,
+                hint: `${plain(l.meters_left)} m left`,
+              }))}
+            />
           </Field>
 
           <div className="grid grid-cols-2 gap-4">
             <Field label="Used for">
-              <select
-                className={inputClass}
+              <Combobox
                 value={form.usage_type}
-                onChange={(e) => set('usage_type', e.target.value as UsageType)}
-              >
-                <option value="actual">Kurti for sale</option>
-                <option value="sample">Sample</option>
-              </select>
+                onChange={(v) => set('usage_type', v as UsageType)}
+                options={[
+                  { value: 'actual', label: 'Kurti for sale' },
+                  { value: 'sample', label: 'Sample' },
+                ]}
+              />
             </Field>
             <Field label="Date">
               <input

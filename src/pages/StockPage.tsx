@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useDeleteFabric, useDrops, useStock } from '../lib/queries'
+import { Combobox } from '../components/Combobox'
 import { FabricDrawer } from '../components/FabricDrawer'
 import { StockInDrawer } from '../components/StockInDrawer'
 import type { FabricStock } from '../lib/types'
@@ -136,30 +137,28 @@ export function StockPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <select
-          className={filterClass}
+        <Combobox
+          className="w-48"
           value={dropId}
-          onChange={(e) => setDropId(e.target.value)}
-          aria-label="Filter by drop"
-        >
-          <option value="all">All drops</option>
-          {(drops.data ?? []).map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name}
-            </option>
-          ))}
-          <option value="none">No drop</option>
-        </select>
-        <select
-          className={filterClass}
+          onChange={setDropId}
+          ariaLabel="Filter by drop"
+          options={[
+            { value: 'all', label: 'All drops' },
+            ...(drops.data ?? []).map((d) => ({ value: d.id, label: d.name })),
+            { value: 'none', label: 'No drop' },
+          ]}
+        />
+        <Combobox
+          className="w-52"
           value={purpose}
-          onChange={(e) => setPurpose(e.target.value as PurposeFilter)}
-          aria-label="Filter by purpose"
-        >
-          <option value="all">All purposes</option>
-          <option value="sample">Bought for samples</option>
-          <option value="production">Bought for production</option>
-        </select>
+          onChange={(v) => setPurpose(v as PurposeFilter)}
+          ariaLabel="Filter by purpose"
+          options={[
+            { value: 'all', label: 'All purposes' },
+            { value: 'sample', label: 'Bought for samples' },
+            { value: 'production', label: 'Bought for production' },
+          ]}
+        />
       </div>
 
       {isLoading ? <Loading /> : null}

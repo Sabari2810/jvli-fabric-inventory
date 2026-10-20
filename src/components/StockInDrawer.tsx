@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useAddStockIn, useStock, useUpdateStockIn } from '../lib/queries'
 import { plain, todayISO } from '../lib/format'
 import type { Purpose, StockIn } from '../lib/types'
+import { Combobox } from './Combobox'
 import { Drawer, ErrorNote, Field, inputClass, primaryButton, subtleButton } from './ui'
 
 /** Add a stock in entry (entry = null), optionally for a fabric, or edit an existing entry. */
@@ -79,28 +80,28 @@ export function StockInDrawer({
           label="Fabric"
           hint={selected ? `${plain(selected.meters_left)} m on the shelf now` : 'Add the fabric on the Stock page first.'}
         >
-          <select
-            required
-            className={inputClass}
+          <Combobox
             value={lotId}
-            onChange={(e) => setLotId(e.target.value)}
+            onChange={setLotId}
             disabled={!!entry}
-          >
-            <option value="">Select a fabric</option>
-            {fabrics.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.fabric_name}
-                {f.color ? `, ${f.color}` : ''}
-              </option>
-            ))}
-          </select>
+            placeholder="Select a fabric"
+            options={fabrics.map((f) => ({
+              value: f.id,
+              label: `${f.fabric_name}${f.color ? `, ${f.color}` : ''}`,
+              hint: `${plain(f.meters_left)} m left`,
+            }))}
+          />
         </Field>
         <div className="grid grid-cols-2 gap-4">
           <Field label="Bought for">
-            <select className={inputClass} value={purpose} onChange={(e) => setPurpose(e.target.value as Purpose)}>
-              <option value="production">Production</option>
-              <option value="sample">Sample</option>
-            </select>
+            <Combobox
+              value={purpose}
+              onChange={(v) => setPurpose(v as Purpose)}
+              options={[
+                { value: 'production', label: 'Production' },
+                { value: 'sample', label: 'Sample' },
+              ]}
+            />
           </Field>
           <Field label="Date">
             <input type="date" required className={inputClass} value={date} onChange={(e) => setDate(e.target.value)} />
