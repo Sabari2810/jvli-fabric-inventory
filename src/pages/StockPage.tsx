@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useCanEdit, useDeleteFabric, useDrops, useFabricTypes, useStock } from '../lib/queries'
+import { useVisualViewport } from '../lib/useVisualViewport'
 import { Combobox } from '../components/Combobox'
 import { FabricDrawer } from '../components/FabricDrawer'
 import { StockInDrawer } from '../components/StockInDrawer'
@@ -35,6 +36,7 @@ export function StockPage() {
   const [dropId, setDropId] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
   const [sheetOpen, setSheetOpen] = useState(false)
+  const { overlay: sheetOverlay } = useVisualViewport(sheetOpen)
   const [draft, setDraft] = useState({ drop: 'all', type: 'all', purpose: 'all' as PurposeFilter })
   const fabricTypes = useFabricTypes()
   const typeName = (id: string | null | undefined) => fabricTypes.data?.find((t) => t.id === id)?.name
@@ -240,7 +242,7 @@ export function StockPage() {
       </div>
 
       {sheetOpen ? (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-50 md:hidden" style={sheetOverlay}>
           <button
             type="button"
             aria-label="Close filters"

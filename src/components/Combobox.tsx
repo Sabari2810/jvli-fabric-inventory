@@ -1,3 +1,4 @@
+import { useVisualViewport } from '../lib/useVisualViewport'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -46,6 +47,7 @@ export function Combobox({
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
   const [sheet, setSheet] = useState(false)
+  const { inset, height: visibleHeight } = useVisualViewport(open && sheet)
   const [rect, setRect] = useState<{ left: number; top: number; width: number } | null>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const popRef = useRef<HTMLDivElement>(null)
@@ -169,7 +171,7 @@ export function Combobox({
             {sheet ? <div className="fixed inset-0 z-[69] bg-black/40" aria-hidden="true" /> : null}
             <div
               ref={popRef}
-              style={sheet ? undefined : { position: 'fixed', left: rect.left, top: rect.top, width: rect.width }}
+              style={sheet ? { bottom: inset } : { position: 'fixed', left: rect.left, top: rect.top, width: rect.width }}
               className={
                 sheet
                   ? 'fixed inset-x-0 bottom-0 z-[70] overflow-hidden rounded-t-3xl bg-white pb-6 shadow-2xl'
@@ -191,7 +193,12 @@ export function Combobox({
                   className="w-full rounded-lg bg-stone-50 px-3 py-2 text-sm text-ink placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-maroon-900/20"
                 />
               </div>
-              <ul ref={listRef} role="listbox" className={`${sheet ? 'max-h-[50vh]' : 'max-h-64'} overflow-y-auto p-1`}>
+              <ul
+                ref={listRef}
+                role="listbox"
+                style={sheet && visibleHeight ? { maxHeight: Math.min(visibleHeight * 0.5, visibleHeight - 140) } : undefined}
+                className={`${sheet ? 'max-h-[50vh]' : 'max-h-64'} overflow-y-auto p-1`}
+              >
                 {filtered.length === 0 && !canCreate ? (
                   <li className="px-3 py-3 text-sm text-stone-500">Nothing found</li>
                 ) : (
