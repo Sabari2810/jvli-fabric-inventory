@@ -329,7 +329,7 @@ export function MobileList({ children }: { children: ReactNode }) {
 }
 
 export function MobileItem({ children }: { children: ReactNode }) {
-  return <li className="rounded-2xl border border-stone-200/80 bg-white p-4">{children}</li>
+  return <li className="relative rounded-2xl border border-stone-200/80 bg-white p-4">{children}</li>
 }
 
 /** A small row of labelled figures inside a card. `strong` tints the last figure. */

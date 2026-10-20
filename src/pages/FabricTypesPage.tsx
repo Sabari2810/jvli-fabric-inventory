@@ -117,12 +117,13 @@ export function FabricTypesPage() {
                   <Link
                     to="/fabric-types/$typeId"
                     params={{ typeId: t.id }}
-                    className="font-display text-lg font-semibold text-ink hover:text-maroon-900"
+                    className="font-display text-lg font-semibold text-ink after:absolute after:inset-0 hover:text-maroon-900"
                   >
                     {t.name}
                   </Link>
+ 
                   {canEdit ? (
-                    <div className="flex shrink-0">
+                    <div className="relative z-10 flex shrink-0">
                       <IconButton icon="edit" label="Rename fabric type" onClick={() => openForm(t)} />
                       <IconButton icon="trash" label="Delete fabric type" danger onClick={() => onDelete(t)} />
                     </div>
@@ -135,9 +136,6 @@ export function FabricTypesPage() {
                     { label: 'Left', value: meters(x?.left ?? 0), strong: true },
                   ]}
                 />
-                <Link to="/fabric-types/$typeId" params={{ typeId: t.id }} className={`${linkButton} mt-3 inline-block`}>
-                  View
-                </Link>
               </MobileItem>
             )
           })}
