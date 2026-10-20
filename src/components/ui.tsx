@@ -1,5 +1,6 @@
 import { useVisualViewport } from '../lib/useVisualViewport'
 import { useEffect, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 export const inputClass =
   'block w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-ink placeholder:text-stone-400 transition focus:border-maroon-900 focus:outline-none focus:ring-4 focus:ring-maroon-900/10 disabled:bg-stone-100'
@@ -110,8 +111,23 @@ export function Drawer({
 
   const { overlay } = useVisualViewport(open)
 
+  // On phones the form is a screen of its own: take the page out of the screen while it is open
+  // (nothing is left behind it to show through the iOS keyboard), and put it back where it was.
+  useEffect(() => {
+    if (!open || !window.matchMedia('(max-width: 767px)').matches) return
+    const root = document.getElementById('root')
+    if (!root) return
+    const y = window.scrollY
+    root.style.display = 'none'
+    window.scrollTo(0, 0)
+    return () => {
+      root.style.display = ''
+      window.scrollTo(0, y)
+    }
+  }, [open])
+
   if (!open) return null
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50" style={overlay} role="dialog" aria-modal="true" aria-label={title}>
       <div className="absolute inset-0 animate-fade-in bg-ink/40" onClick={onClose} />
       {/* Solid layer over the whole screen on phones, so the page cannot show through the translucent iOS keyboard */}
@@ -130,7 +146,8 @@ export function Drawer({
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-5 pb-8 md:px-6 md:py-6">{children}</div>
       </aside>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
