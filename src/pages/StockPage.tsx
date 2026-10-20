@@ -10,7 +10,6 @@ import {
   Icon,
   Loading,
   PageHeader,
-  TapeBar,
   Td,
   Th,
   Thumb,
@@ -175,14 +174,13 @@ export function StockPage() {
                   <Th align="right">Samples</Th>
                   <Th align="right">Kurtis</Th>
                   <Th align="right">Wastage</Th>
-                  <Th>Left</Th>
+                  <Th align="right">Left</Th>
                   <Th />
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {filtered.map((r) => {
                   const left = Number(r.meters_left)
-                  const empty = left <= 0
                   const drop = dropName(r.drop_id)
                   return (
                     <tr key={r.id} className="transition hover:bg-stone-50/70">
@@ -200,14 +198,8 @@ export function StockPage() {
                       <Td align="right">{plain(r.meters_sample)} m</Td>
                       <Td align="right">{plain(r.meters_actual)} m</Td>
                       <Td align="right">{plain(r.meters_wastage)} m</Td>
-                      <Td className="min-w-40">
-                        <p className="font-display font-semibold tabular-nums text-ink">
-                          {meters(left)}
-                          {empty ? <span className="ml-2 align-middle"><Badge>Finished</Badge></span> : null}
-                        </p>
-                        <div className="mt-1.5">
-                          <TapeBar left={left} total={Number(r.meters_bought)} tone={empty ? 'empty' : 'ok'} />
-                        </div>
+                      <Td align="right" className="font-semibold">
+                        {plain(left)} m
                       </Td>
                       <Td align="right" className="whitespace-nowrap">
                         <Link to="/usage" search={{ lot: r.id }} className={`${linkButton} mr-4`}>
