@@ -28,7 +28,7 @@ type PurposeFilter = 'all' | 'sample' | 'production'
 type SortKey = 'recent' | 'name' | 'left_desc' | 'left_asc'
 
 const sortOptions = [
-  { value: 'recent', label: 'Newest first' },
+  { value: 'recent', label: 'Default order' },
   { value: 'name', label: 'Name A to Z' },
   { value: 'left_desc', label: 'Most left' },
   { value: 'left_asc', label: 'Least left' },
@@ -100,7 +100,6 @@ export function StockPage() {
     if (sort === 'name') list.sort((a, b) => a.fabric_name.localeCompare(b.fabric_name))
     else if (sort === 'left_desc') list.sort((a, b) => Number(b.meters_left) - Number(a.meters_left))
     else if (sort === 'left_asc') list.sort((a, b) => Number(a.meters_left) - Number(b.meters_left))
-    else list.sort((a, b) => b.created_at.localeCompare(a.created_at))
     return list
   }, [rows, search, purpose, typeFilter, sort, fabricTypes.data])
 
@@ -307,7 +306,6 @@ export function StockPage() {
           ariaLabel="Filter by purpose"
           options={purposeOptions}
         />
-        <Combobox className="w-44" value={sort} onChange={(v) => setSort(v as SortKey)} ariaLabel="Sort" options={sortOptions} />
       </div>
 
       {isLoading ? <Loading /> : null}
