@@ -20,9 +20,10 @@ export const dangerLink =
 
 /* ---------- Icons (Heroicons-style outlines) ---------- */
 
-type IconName = 'stock' | 'purchase' | 'cut' | 'plus' | 'close' | 'image' | 'logout'
+type IconName = 'drop' | 'stock' | 'purchase' | 'cut' | 'plus' | 'close' | 'image' | 'logout'
 
 const iconPaths: Record<IconName, string> = {
+  drop: 'M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3ZM6 6h.008v.008H6V6Z',
   stock: 'M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5',
   purchase: 'M2.25 3h1.4l.4 2m0 0 1.6 8.2a1 1 0 0 0 1 .8h9.5a1 1 0 0 0 1-.76l1.5-6.24H4.05ZM9 19.5a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm8 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z',
   cut: 'M7.85 8.35 20 18.5M7.85 15.65 20 5.5M8 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',

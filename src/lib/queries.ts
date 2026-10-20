@@ -100,6 +100,35 @@ export function useAddDrop() {
   })
 }
 
+export function useRenameDrop() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const { error } = await supabase.from('drops').update({ name }).eq('id', id)
+      if (error) {
+        if (error.code === '23505') throw new Error('A drop with that name already exists.')
+        throw new Error(error.message)
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.drops }),
+  })
+}
+
+export function useDeleteDrop() {
+  const refresh = useRefreshAll()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('drops').delete().eq('id', id)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: KEYS.drops })
+      await refresh()
+    },
+  })
+}
+
 /* ---------- Fabrics ---------- */
 
 export function useAddFabric() {

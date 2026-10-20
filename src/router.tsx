@@ -2,6 +2,8 @@ import { createRootRoute, createRoute, createRouter, Outlet } from '@tanstack/re
 import { AppLayout } from './components/AppLayout'
 import { LoginPage } from './pages/LoginPage'
 import { StockPage } from './pages/StockPage'
+import { DropDetailPage } from './pages/DropDetailPage'
+import { DropsPage } from './pages/DropsPage'
 import { FabricDetailPage } from './pages/FabricDetailPage'
 import { StockInPage } from './pages/StockInPage'
 import { UsagePage } from './pages/UsagePage'
@@ -44,6 +46,23 @@ function FabricRouteComponent() {
   return <FabricDetailPage key={fabricId} fabricId={fabricId} />
 }
 
+const dropsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/drops',
+  component: DropsPage,
+})
+
+const dropRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/drops/$dropId',
+  component: DropRouteComponent,
+})
+
+function DropRouteComponent() {
+  const { dropId } = dropRoute.useParams()
+  return <DropDetailPage key={dropId} dropId={dropId} />
+}
+
 const usageRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/out',
@@ -60,7 +79,7 @@ function UsageRouteComponent() {
 
 const routeTree = rootRoute.addChildren([
   loginRoute,
-  appRoute.addChildren([stockRoute, fabricRoute, stockInRoute, usageRoute]),
+  appRoute.addChildren([stockRoute, fabricRoute, dropsRoute, dropRoute, stockInRoute, usageRoute]),
 ])
 
 export const router = createRouter({ routeTree })

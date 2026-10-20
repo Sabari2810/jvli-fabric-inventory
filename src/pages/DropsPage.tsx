@@ -1,0 +1,208 @@
+import { useMemo, useState, type FormEvent } from 'react'
+import { Link } from '@tanstack/react-router'
+import { useAddDrop, useDeleteDrop, useDrops, useRenameDrop, useStock } from '../lib/queries'
+import { meters, rupees } from '../lib/format'
+import {
+  Card,
+  Drawer,
+  EmptyState,
+  ErrorNote,
+  Field,
+  Icon,
+  Loading,
+  PageHeader,
+  Td,
+  Th,
+  dangerLink,
+  inputClass,
+  linkButton,
+  primaryButton,
+  subtleButton,
+} from '../components/ui'
+import type { Drop } from '../lib/types'
+
+export function DropsPage() {
+  const drops = useDrops()
+  const stock = useStock()
+  const addDrop = useAddDrop()
+  const renameDrop = useRenameDrop()
+  const deleteDrop = useDeleteDrop()
+
+  const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState<Drop | null>(null)
+  const [name, setName] = useState('')
+  const [error, setError] = useState<string | null>(null)
+
+  const totals = useMemo(() => {
+    const map = new Map<string, { fabrics: number; bought: number; out: number; left: number; value: number }>()
+    for (const f of stock.data ?? []) {
+      if (!f.drop_id) continue
+      const t = map.get(f.drop_id) ?? { fabrics: 0, bought: 0, out: 0, left: 0, value: 0 }
+      t.fabrics += 1
+      t.bought += Number(f.meters_bought)
+      t.out += Number(f.meters_sample) + Number(f.meters_actual) + Number(f.meters_wastage)
+      t.left += Number(f.meters_left)
+      t.value += Number(f.meters_left) * Number(f.rate_per_meter)
+      map.set(f.drop_id, t)
+    }
+    return map
+  }, [stock.data])
+
+  function startAdd() {
+    setEditing(null)
+    setName('')
+    setError(null)
+    setOpen(true)
+  }
+
+  function startRename(d: Drop) {
+    setEditing(d)
+    setName(d.name)
+    setError(null)
+    setOpen(true)
+  }
+
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault()
+    const value = name.trim()
+    if (!value) return setError('Enter a name for the drop.')
+    try {
+      if (editing) await renameDrop.mutateAsync({ id: editing.id, name: value })
+      else await addDrop.mutateAsync(value)
+      setOpen(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save the drop.')
+    }
+  }
+
+  function onDelete(d: Drop) {
+    const count = totals.get(d.id)?.fabrics ?? 0
+    const note = count > 0 ? ` Its ${count} fabrics stay in stock, just without a drop.` : ''
+    if (!window.confirm(`Delete ${d.name}?${note}`)) return
+    deleteDrop.mutate(d.id)
+  }
+
+  const rows = drops.data ?? []
+  const saving = addDrop.isPending || renameDrop.isPending
+
+  return (
+    <>
+      <PageHeader
+        title="Drops"
+        subtitle="Group fabrics by launch and see the total for each."
+        action={
+          <button type="button" className={primaryButton} onClick={startAdd}>
+            <Icon name="plus" className="h-4 w-4" />
+            New drop
+          </button>
+        }
+      />
+
+      <Card>
+        {drops.isLoading || stock.isLoading ? <Loading /> : null}
+        {drops.error ? (
+          <div className="p-4">
+            <ErrorNote message={drops.error.message} />
+          </div>
+        ) : null}
+        {deleteDrop.error ? (
+          <div className="p-4">
+            <ErrorNote message={deleteDrop.error.message} />
+          </div>
+        ) : null}
+        {!drops.isLoading && !drops.error && rows.length === 0 ? (
+          <EmptyState
+            title="No drops yet"
+            body="Create a drop like October Drop, then assign fabrics to it when you edit them."
+            action={
+              <button type="button" className={primaryButton} onClick={startAdd}>
+                New drop
+              </button>
+            }
+          />
+        ) : null}
+        {rows.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-stone-100">
+              <thead>
+                <tr>
+                  <Th>Drop</Th>
+                  <Th align="right">Fabrics</Th>
+                  <Th align="right">Stock in</Th>
+                  <Th align="right">Stock out</Th>
+                  <Th align="right">Left</Th>
+                  <Th align="right">Stock value</Th>
+                  <Th />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {rows.map((d) => {
+                  const t = totals.get(d.id) ?? { fabrics: 0, bought: 0, out: 0, left: 0, value: 0 }
+                  return (
+                    <tr key={d.id} className="transition hover:bg-stone-50/70">
+                      <Td>
+                        <Link
+                          to="/drops/$dropId"
+                          params={{ dropId: d.id }}
+                          className="font-semibold text-ink underline-offset-4 hover:text-maroon-900 hover:underline"
+                        >
+                          {d.name}
+                        </Link>
+                      </Td>
+                      <Td align="right">{t.fabrics}</Td>
+                      <Td align="right">{meters(t.bought)}</Td>
+                      <Td align="right">{meters(t.out)}</Td>
+                      <Td align="right" className="font-semibold">
+                        {meters(t.left)}
+                      </Td>
+                      <Td align="right">{rupees(t.value)}</Td>
+                      <Td align="right" className="whitespace-nowrap">
+                        <Link to="/drops/$dropId" params={{ dropId: d.id }} className={`${linkButton} mr-4`}>
+                          View
+                        </Link>
+                        <button
+                          type="button"
+                          className="mr-4 text-sm text-stone-500 hover:text-ink"
+                          onClick={() => startRename(d)}
+                        >
+                          Rename
+                        </button>
+                        <button type="button" className={dangerLink} onClick={() => onDelete(d)}>
+                          Delete
+                        </button>
+                      </Td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </Card>
+
+      <Drawer open={open} title={editing ? 'Rename drop' : 'New drop'} onClose={() => setOpen(false)}>
+        <form onSubmit={onSubmit} className="space-y-5">
+          <Field label="Drop name">
+            <input
+              autoFocus
+              required
+              placeholder="October Drop"
+              className={inputClass}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </Field>
+          <ErrorNote message={error} />
+          <div className="flex gap-3 border-t border-stone-100 pt-5">
+            <button type="submit" disabled={saving} className={primaryButton}>
+              {saving ? 'Saving' : editing ? 'Save name' : 'Create drop'}
+            </button>
+            <button type="button" className={subtleButton} onClick={() => setOpen(false)}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </Drawer>
+    </>
+  )
+}
