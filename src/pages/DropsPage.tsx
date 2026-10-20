@@ -112,13 +112,13 @@ export function DropsPage() {
           {rows.map((d) => {
             const t = totals.get(d.id) ?? { fabrics: 0, bought: 0, out: 0, left: 0, value: 0 }
             return (
-              <li key={d.id} className="rounded-2xl border border-stone-200/80 bg-white p-4">
+              <li key={d.id} className="relative rounded-2xl border border-stone-200/80 bg-white p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <Link
                       to="/drops/$dropId"
                       params={{ dropId: d.id }}
-                      className="block font-display text-lg font-semibold leading-snug text-ink hover:text-maroon-900"
+                      className="block font-display text-lg font-semibold leading-snug text-ink after:absolute after:inset-0 hover:text-maroon-900"
                     >
                       {d.name}
                     </Link>
@@ -147,17 +147,12 @@ export function DropsPage() {
                     <dd className="whitespace-nowrap text-sm font-semibold tabular-nums text-maroon-900">{meters(t.left)}</dd>
                   </div>
                 </dl>
-                <div className="mt-3 flex items-center justify-between">
-                  <Link to="/drops/$dropId" params={{ dropId: d.id }} className={linkButton}>
-                    View
-                  </Link>
-                  {canEdit ? (
-                    <div className="flex">
-                      <IconButton icon="edit" label="Rename drop" onClick={() => startRename(d)} />
-                      <IconButton icon="trash" label="Delete drop" danger onClick={() => onDelete(d)} />
-                    </div>
-                  ) : null}
-                </div>
+                {canEdit ? (
+                  <div className="relative z-10 mt-3 flex justify-end">
+                    <IconButton icon="edit" label="Rename drop" onClick={() => startRename(d)} />
+                    <IconButton icon="trash" label="Delete drop" danger onClick={() => onDelete(d)} />
+                  </div>
+                ) : null}
               </li>
             )
           })}
