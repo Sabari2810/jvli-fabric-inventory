@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
-import { useAddLot, useDeleteLot, useLots } from '../lib/queries'
+import { useAddDrop, useAddLot, useDeleteLot, useDrops, useLots, useSetLotDrop } from '../lib/queries'
 import { meters, rupees, shortDate, todayISO } from '../lib/format'
 import { fileToWebpDataUrl } from '../lib/image'
 import type { Purpose } from '../lib/types'
@@ -16,6 +16,7 @@ import {
   dangerLink,
   inputClass,
   primaryButton,
+  subtleButton,
 } from '../components/ui'
 
 interface FormState {
@@ -28,6 +29,7 @@ interface FormState {
   purpose: Purpose
   low_stock_meters: string
   notes: string
+  drop_id: string
 }
 
 const emptyForm = (): FormState => ({
@@ -40,11 +42,15 @@ const emptyForm = (): FormState => ({
   purpose: 'production',
   low_stock_meters: '5',
   notes: '',
+  drop_id: '',
 })
 
 export function LotsPage() {
   const { data, isLoading, error } = useLots()
   const addLot = useAddLot()
+  const drops = useDrops()
+  const addDrop = useAddDrop()
+  const setLotDrop = useSetLotDrop()
   const deleteLot = useDeleteLot()
   const [form, setForm] = useState<FormState>(emptyForm)
   const [formError, setFormError] = useState<string | null>(null)
@@ -90,6 +96,18 @@ export function LotsPage() {
     return () => document.removeEventListener('paste', onPaste)
   }, [])
 
+  async function onNewDrop() {
+    const name = window.prompt('Name of the new drop (for example, October Drop)')?.trim()
+    if (!name) return
+    setFormError(null)
+    try {
+      const d = await addDrop.mutateAsync(name)
+      set('drop_id', d.id)
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Could not create the drop.')
+    }
+  }
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setFormError(null)
@@ -110,6 +128,7 @@ export function LotsPage() {
         low_stock_meters: Number(form.low_stock_meters) || 0,
         notes: form.notes.trim() || null,
         image_data: image,
+        drop_id: form.drop_id || null,
       })
       setForm(emptyForm())
       setImage(null)
@@ -213,6 +232,25 @@ export function LotsPage() {
                 onChange={(e) => set('low_stock_meters', e.target.value)}
               />
             </Field>
+            <Field label="Drop" hint="Group this fabric with the other fabrics of a launch">
+              <div className="flex gap-2">
+                <select
+                  className={inputClass}
+                  value={form.drop_id}
+                  onChange={(e) => set('drop_id', e.target.value)}
+                >
+                  <option value="">No drop</option>
+                  {(drops.data ?? []).map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+                <button type="button" className={subtleButton} onClick={() => void onNewDrop()}>
+                  New drop
+                </button>
+              </div>
+            </Field>
             <Field label="Fabric photo" hint="Choose a file, or paste an image anywhere on this page (Ctrl+V / Cmd+V). Converted to WebP before saving." className="sm:col-span-2 lg:col-span-4">
               <div className="flex items-center gap-4">
                 {image ? (
@@ -275,6 +313,7 @@ export function LotsPage() {
                 <tr>
                   <Th />
                   <Th>Fabric</Th>
+                  <Th>Drop</Th>
                   <Th>Supplier</Th>
                   <Th>Purpose</Th>
                   <Th align="right">Meters</Th>
@@ -298,6 +337,22 @@ export function LotsPage() {
                       <p className="text-xs text-stone-500">
                         {l.color || 'No color'} | {shortDate(l.purchase_date)}
                       </p>
+                    </Td>
+                    <Td>
+                      <select
+                        aria-label="Drop"
+                        className="rounded-lg border border-stone-300 bg-white px-2 py-1 text-sm"
+                        value={l.drop_id ?? ''}
+                        disabled={setLotDrop.isPending}
+                        onChange={(e) => setLotDrop.mutate({ id: l.id, dropId: e.target.value || null })}
+                      >
+                        <option value="">No drop</option>
+                        {(drops.data ?? []).map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {d.name}
+                          </option>
+                        ))}
+                      </select>
                     </Td>
                     <Td className="text-stone-600">{l.supplier || '-'}</Td>
                     <Td>

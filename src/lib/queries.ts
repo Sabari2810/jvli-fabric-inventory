@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from './supabase'
-import type { FabricLot, FabricStock, FabricUsage, NewLot, NewUsage } from './types'
+import type { Drop, FabricLot, FabricStock, FabricUsage, NewLot, NewUsage } from './types'
 
 const KEYS = {
   stock: ['stock'] as const,
   lots: ['lots'] as const,
   usage: ['usage'] as const,
+  drops: ['drops'] as const,
 }
 
 export function useStock() {
@@ -63,11 +64,51 @@ function useRefreshAll() {
     ])
 }
 
+export function useDrops() {
+  return useQuery({
+    queryKey: KEYS.drops,
+    queryFn: async (): Promise<Drop[]> => {
+      const { data, error } = await supabase
+        .from('drops')
+        .select('*')
+        .order('created_at', { ascending: false })
+      if (error) throw new Error(error.message)
+      return (data ?? []) as Drop[]
+    },
+  })
+}
+
+export function useAddDrop() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (name: string): Promise<Drop> => {
+      const { data, error } = await supabase.from('drops').insert({ name }).select().single()
+      if (error) {
+        if (error.code === '23505') throw new Error('A drop with that name already exists.')
+        throw new Error(error.message)
+      }
+      return data as Drop
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.drops }),
+  })
+}
+
 export function useAddLot() {
   const refresh = useRefreshAll()
   return useMutation({
     mutationFn: async (lot: NewLot) => {
       const { error } = await supabase.from('fabric_lots').insert(lot)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: refresh,
+  })
+}
+
+export function useSetLotDrop() {
+  const refresh = useRefreshAll()
+  return useMutation({
+    mutationFn: async ({ id, dropId }: { id: string; dropId: string | null }) => {
+      const { error } = await supabase.from('fabric_lots').update({ drop_id: dropId }).eq('id', id)
       if (error) throw new Error(error.message)
     },
     onSuccess: refresh,

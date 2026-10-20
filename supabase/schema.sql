@@ -157,3 +157,21 @@ create policy "usage: authenticated full access"
 revoke all on public.fabric_lots, public.fabric_usage, public.fabric_stock from anon;
 grant select, insert, update, delete on public.fabric_lots, public.fabric_usage to authenticated;
 grant select on public.fabric_stock to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Drops: group fabrics by launch (for example "October Drop")
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.drops (
+  id uuid primary key default gen_random_uuid(),
+  name text not null check (length(trim(name)) > 0),
+  created_at timestamptz not null default now()
+);
+create unique index if not exists drops_name_unique on public.drops (lower(trim(name)));
+alter table public.drops enable row level security;
+create policy "drops: authenticated full access" on public.drops for all to authenticated using (true) with check (true);
+revoke all on public.drops from anon;
+grant select, insert, update, delete on public.drops to authenticated;
+alter table public.fabric_lots add column if not exists drop_id uuid references public.drops(id) on delete set null;
+create index if not exists fabric_lots_drop_idx on public.fabric_lots (drop_id);
+-- fabric_stock also exposes l.drop_id as its last column (re-run the view above with it appended).

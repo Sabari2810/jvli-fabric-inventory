@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { useStock } from '../lib/queries'
+import { useDrops, useStock } from '../lib/queries'
 import { meters, plain, rupees, shortDate } from '../lib/format'
 import {
   Badge,
@@ -23,8 +23,18 @@ export function StockPage() {
   const [search, setSearch] = useState('')
   const [purpose, setPurpose] = useState<PurposeFilter>('all')
   const [lowOnly, setLowOnly] = useState(false)
+  const [dropId, setDropId] = useState('all')
+  const drops = useDrops()
+  const dropName = (id: string | null | undefined) => drops.data?.find((d) => d.id === id)?.name
 
-  const rows = data ?? []
+  const allRows = data ?? []
+  const rows = useMemo(
+    () =>
+      allRows.filter((r) =>
+        dropId === 'all' ? true : dropId === 'none' ? !r.drop_id : r.drop_id === dropId,
+      ),
+    [allRows, dropId],
+  )
 
   const totals = useMemo(() => {
     let bought = 0
@@ -88,6 +98,20 @@ export function StockPage() {
           />
           <select
             className={`${inputClass} w-auto`}
+            value={dropId}
+            onChange={(e) => setDropId(e.target.value)}
+            aria-label="Filter by drop"
+          >
+            <option value="all">All drops</option>
+            {(drops.data ?? []).map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+            <option value="none">No drop</option>
+          </select>
+          <select
+            className={`${inputClass} w-auto`}
             value={purpose}
             onChange={(e) => setPurpose(e.target.value as PurposeFilter)}
             aria-label="Filter by purpose"
@@ -116,7 +140,7 @@ export function StockPage() {
 
         {!isLoading && !error && filtered.length === 0 ? (
           <EmptyState
-            title={rows.length === 0 ? 'No fabric recorded yet' : 'Nothing matches these filters'}
+            title={rows.length === 0 && allRows.length === 0 ? 'No fabric recorded yet' : 'Nothing matches these filters'}
             body={
               rows.length === 0
                 ? 'Add your first purchase to start tracking meters.'
@@ -132,6 +156,7 @@ export function StockPage() {
                 <tr>
                   <Th />
                   <Th>Fabric</Th>
+                  <Th>Drop</Th>
                   <Th>Supplier</Th>
                   <Th>Purpose</Th>
                   <Th align="right">Bought</Th>
@@ -161,6 +186,13 @@ export function StockPage() {
                         <p className="text-xs text-stone-500">
                           {r.color || 'No color'} | {shortDate(r.purchase_date)}
                         </p>
+                      </Td>
+                      <Td>
+                        {dropName(r.drop_id) ? (
+                          <Badge tone="maroon">{dropName(r.drop_id)}</Badge>
+                        ) : (
+                          <span className="text-stone-400">-</span>
+                        )}
                       </Td>
                       <Td className="text-stone-600">{r.supplier || '-'}</Td>
                       <Td>

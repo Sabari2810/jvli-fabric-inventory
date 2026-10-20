@@ -14,6 +14,7 @@ export interface FabricLot {
   low_stock_meters: number
   notes: string | null
   image_data?: string | null
+  drop_id?: string | null
   created_at: string
 }
 
@@ -41,6 +42,12 @@ export interface FabricUsage {
     color: string | null
     rate_per_meter: number
   } | null
+}
+
+export interface Drop {
+  id: string
+  name: string
+  created_at: string
 }
 
 export type NewLot = Omit<FabricLot, 'id' | 'lot_code' | 'created_at'>
