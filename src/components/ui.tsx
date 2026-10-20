@@ -259,7 +259,7 @@ export function Thumb({
   const w = className.match(/\bw-(\d+)\b/)
   const pin = w ? { minWidth: `${Number(w[1]) * 0.25}rem` } : undefined
   if (src) {
-    return <img src={src} alt={name} style={pin} className={`${className} shrink-0 rounded-lg object-cover`} />
+    return <img src={src} alt={name} style={pin} className={`${className} max-w-none shrink-0 rounded-lg object-cover`} />
   }
   return (
     <div
