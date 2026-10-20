@@ -45,6 +45,7 @@ export function Combobox({
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
+  const [sheet, setSheet] = useState(false)
   const [rect, setRect] = useState<{ left: number; top: number; width: number } | null>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const popRef = useRef<HTMLDivElement>(null)
@@ -61,6 +62,7 @@ export function Combobox({
     if (disabled) return
     const r = buttonRef.current?.getBoundingClientRect()
     if (r) setRect({ left: r.left, top: r.bottom + 6, width: Math.max(r.width, 220) })
+    setSheet(window.matchMedia('(max-width: 767px)').matches)
     setQuery('')
     setActive(Math.max(0, options.findIndex((o) => o.value === value)))
     setOpen(true)
@@ -163,11 +165,18 @@ export function Combobox({
       </button>
       {open && rect
         ? createPortal(
+            <>
+            {sheet ? <div className="fixed inset-0 z-[69] bg-black/40" aria-hidden="true" /> : null}
             <div
               ref={popRef}
-              style={{ position: 'fixed', left: rect.left, top: rect.top, width: rect.width }}
-              className="z-[70] overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl"
+              style={sheet ? undefined : { position: 'fixed', left: rect.left, top: rect.top, width: rect.width }}
+              className={
+                sheet
+                  ? 'fixed inset-x-0 bottom-0 z-[70] overflow-hidden rounded-t-3xl bg-white pb-6 shadow-2xl'
+                  : 'z-[70] overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl'
+              }
             >
+              {sheet ? <div className="mx-auto mt-3 mb-1 h-1 w-10 rounded-full bg-stone-300" /> : null}
               <div className="border-b border-stone-100 p-2">
                 <input
                   autoFocus={typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches}
@@ -182,7 +191,7 @@ export function Combobox({
                   className="w-full rounded-lg bg-stone-50 px-3 py-2 text-sm text-ink placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-maroon-900/20"
                 />
               </div>
-              <ul ref={listRef} role="listbox" className="max-h-64 overflow-y-auto p-1">
+              <ul ref={listRef} role="listbox" className={`${sheet ? 'max-h-[50vh]' : 'max-h-64'} overflow-y-auto p-1`}>
                 {filtered.length === 0 && !canCreate ? (
                   <li className="px-3 py-3 text-sm text-stone-500">Nothing found</li>
                 ) : (
@@ -194,7 +203,7 @@ export function Combobox({
                       onMouseEnter={() => setActive(i)}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => pick(o)}
-                      className={`flex cursor-pointer items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm ${
+                      className={`flex cursor-pointer items-center justify-between gap-3 rounded-lg px-3 ${sheet ? 'py-3' : 'py-2'} text-sm ${
                         i === active ? 'bg-maroon-50 text-maroon-900' : 'text-ink'
                       } ${o.value === value ? 'font-semibold' : ''}`}
                     >
@@ -222,7 +231,8 @@ export function Combobox({
                   </li>
                 ) : null}
               </ul>
-            </div>,
+            </div>
+            </>,
             document.body,
           )
         : null}
