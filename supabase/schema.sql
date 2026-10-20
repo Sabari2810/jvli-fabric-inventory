@@ -129,7 +129,8 @@ select
   coalesce(sum(u.meters_used) filter (where u.usage_type = 'sample'), 0)        as meters_sample,
   coalesce(sum(u.meters_used) filter (where u.usage_type = 'actual'), 0)        as meters_actual,
   coalesce(sum(u.wastage_meters), 0)                                            as meters_wastage,
-  l.meters_bought - coalesce(sum(u.meters_used + u.wastage_meters), 0)          as meters_left
+  l.meters_bought - coalesce(sum(u.meters_used + u.wastage_meters), 0)          as meters_left,
+  l.image_data
 from public.fabric_lots l
 left join public.fabric_usage u on u.lot_id = l.id
 group by l.id;

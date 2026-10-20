@@ -130,6 +130,7 @@ export function StockPage() {
             <table className="min-w-full divide-y divide-stone-200">
               <thead className="bg-stone-50">
                 <tr>
+                  <Th />
                   <Th>Lot</Th>
                   <Th>Fabric</Th>
                   <Th>Supplier</Th>
@@ -149,6 +150,13 @@ export function StockPage() {
                   const empty = left <= 0
                   return (
                     <tr key={r.id} className="hover:bg-stone-50">
+                      <Td>
+                        {r.image_data ? (
+                          <img src={r.image_data} alt={r.fabric_name} className="h-12 w-12 rounded-lg border border-stone-200 object-cover" />
+                        ) : (
+                          <div className="h-12 w-12 rounded-lg border border-dashed border-stone-200 bg-stone-50" />
+                        )}
+                      </Td>
                       <Td>
                         <p className="font-medium text-stone-900">{r.lot_code}</p>
                         <p className="text-xs text-stone-500">{shortDate(r.purchase_date)}</p>
