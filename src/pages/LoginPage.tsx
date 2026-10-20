@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate } from '@tanstack/react-router'
 import { useAuth } from '../lib/auth'
+import { usernameToEmail } from '../lib/username'
 import { ErrorNote, Field, inputClass, primaryButton } from '../components/ui'
 
 export function LoginPage() {
   const { session, loading, signIn } = useAuth()
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -16,8 +17,14 @@ export function LoginPage() {
     e.preventDefault()
     setBusy(true)
     setError(null)
-    const message = await signIn(email.trim(), password)
-    if (message) setError(message)
+    const message = await signIn(usernameToEmail(username), password)
+    if (message) {
+      setError(
+        message.toLowerCase().includes('invalid login')
+          ? 'Wrong username or password.'
+          : message,
+      )
+    }
     setBusy(false)
   }
 
@@ -32,14 +39,16 @@ export function LoginPage() {
           onSubmit={onSubmit}
           className="space-y-4 rounded-xl border border-stone-200 bg-white p-6 shadow-sm"
         >
-          <Field label="Email">
+          <Field label="Username">
             <input
-              type="email"
+              type="text"
               required
-              autoComplete="email"
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
               className={inputClass}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
           </Field>
           <Field label="Password">

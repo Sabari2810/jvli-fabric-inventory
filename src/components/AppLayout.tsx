@@ -1,5 +1,6 @@
 import { Link, Navigate, Outlet } from '@tanstack/react-router'
 import { useAuth } from '../lib/auth'
+import { emailToUsername } from '../lib/username'
 import { Loading, subtleButton } from './ui'
 
 const navLink =
@@ -39,7 +40,7 @@ export function AppLayout() {
             </Link>
           </nav>
           <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-stone-500 sm:inline">{session.user.email}</span>
+            <span className="hidden text-sm text-stone-500 sm:inline">{emailToUsername(session.user.email)}</span>
             <button type="button" className={subtleButton} onClick={() => void signOut()}>
               Sign out
             </button>

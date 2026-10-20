@@ -14,7 +14,7 @@ Stack: Vite, React, TypeScript, Tailwind CSS v4, TanStack Router, TanStack Query
    - Row level security so only signed-in users can read or write
    - Guards that stop usage from exceeding what was bought
 3. **Turn off public sign ups**: Authentication > Sign In / Providers > Email, then disable "Allow new users to sign up". Without this, anyone who finds your anon key could create an account and see your data.
-4. **Create your users**: Authentication > Users > Add user, with an email and password, and tick "Auto Confirm User". Add one per teammate. There is no sign up page in the app, so this is the only way people get an account.
+4. **Create your users**: Authentication > Users > Add user, with an email and password, and tick "Auto Confirm User". Add one per teammate. There is no sign up page in the app, so this is the only way people get an account. The app logs people in by username: create each user with the email `username@jvli.store` (for example `admin@jvli.store`) and they type just `username` on the login screen. No email is ever sent to these addresses.
 5. Copy your keys from Project Settings > API: the Project URL and the anon public key.
 
 ## 2. Run locally
