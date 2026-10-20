@@ -3,6 +3,7 @@ import { supabase } from './supabase'
 import type {
   Drop,
   Supplier,
+  FabricType,
   FabricInput,
   FabricStock,
   FabricUsage,
@@ -17,6 +18,7 @@ const KEYS = {
   usage: ['usage'] as const,
   drops: ['drops'] as const,
   suppliers: ['suppliers'] as const,
+  fabricTypes: ['fabric-types'] as const,
 }
 
 export function useStock() {
@@ -132,6 +134,35 @@ export function useAddSupplier() {
       return data as Supplier
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.suppliers }),
+  })
+}
+
+export function useFabricTypes() {
+  return useQuery({
+    queryKey: KEYS.fabricTypes,
+    queryFn: async (): Promise<FabricType[]> => {
+      const { data, error } = await supabase.from('fabric_types').select('*').order('name')
+      if (error) throw new Error(error.message)
+      return (data ?? []) as FabricType[]
+    },
+  })
+}
+
+export function useAddFabricType() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (name: string): Promise<FabricType> => {
+      const { data, error } = await supabase.from('fabric_types').insert({ name }).select().single()
+      if (error) {
+        if (error.code === '23505') {
+          const { data: existing } = await supabase.from('fabric_types').select('*').ilike('name', name).single()
+          if (existing) return existing as FabricType
+        }
+        throw new Error(error.message)
+      }
+      return data as FabricType
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.fabricTypes }),
   })
 }
 

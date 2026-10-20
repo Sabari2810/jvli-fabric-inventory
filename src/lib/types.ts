@@ -16,6 +16,8 @@ export interface FabricStock {
   notes: string | null
   image_data: string | null
   drop_id: string | null
+  fabric_type_id: string | null
+  width_inches: number | null
   created_at: string
   purchase_date: string | null
   supplier: string | null
@@ -36,12 +38,20 @@ export interface Supplier {
   created_at: string
 }
 
+export interface FabricType {
+  id: string
+  name: string
+  created_at: string
+}
+
 export interface FabricInput {
   fabric_name: string
   color: string | null
   notes: string | null
   image_data: string | null
   drop_id: string | null
+  fabric_type_id: string | null
+  width_inches: number | null
 }
 
 export interface StockIn {

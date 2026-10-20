@@ -234,3 +234,19 @@ revoke all on function public.is_viewer() from public, anon;
 grant execute on function public.is_viewer() to authenticated;
 -- plus, for each of fabric_lots, fabric_usage, fabric_stock_in, drops, suppliers: restrictive
 -- insert / update / delete policies with (not public.is_viewer()).
+
+-- Fabric types (Cambric Cotton, Jaipuri Cotton, ...) and fabric width in inches.
+create table if not exists public.fabric_types (
+  id uuid primary key default gen_random_uuid(),
+  name text not null check (length(trim(name)) > 0),
+  created_at timestamptz not null default now()
+);
+create unique index if not exists fabric_types_name_unique on public.fabric_types (lower(trim(name)));
+alter table public.fabric_types enable row level security;
+create policy "fabric types: authenticated full access" on public.fabric_types for all to authenticated using (true) with check (true);
+-- plus restrictive viewer policies (not public.is_viewer()) for insert / update / delete.
+revoke all on public.fabric_types from anon;
+grant select, insert, update, delete on public.fabric_types to authenticated;
+alter table public.fabric_lots add column if not exists fabric_type_id uuid references public.fabric_types(id) on delete set null;
+alter table public.fabric_lots add column if not exists width_inches numeric(5,1) check (width_inches is null or width_inches > 0);
+-- fabric_stock also exposes l.fabric_type_id and l.width_inches as its last two columns.

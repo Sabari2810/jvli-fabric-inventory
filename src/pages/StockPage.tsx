@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { useCanEdit, useDeleteFabric, useDrops, useStock } from '../lib/queries'
+import { useCanEdit, useDeleteFabric, useDrops, useFabricTypes, useStock } from '../lib/queries'
 import { Combobox } from '../components/Combobox'
 import { FabricDrawer } from '../components/FabricDrawer'
 import { StockInDrawer } from '../components/StockInDrawer'
@@ -32,6 +32,9 @@ export function StockPage() {
   const [search, setSearch] = useState('')
   const [purpose, setPurpose] = useState<PurposeFilter>('all')
   const [dropId, setDropId] = useState('all')
+  const [typeFilter, setTypeFilter] = useState('all')
+  const fabricTypes = useFabricTypes()
+  const typeName = (id: string | null | undefined) => fabricTypes.data?.find((t) => t.id === id)?.name
   const deleteFabric = useDeleteFabric()
   const canEdit = useCanEdit()
   const [fabricOpen, setFabricOpen] = useState(false)
@@ -76,12 +79,13 @@ export function StockPage() {
     const q = search.trim().toLowerCase()
     return rows.filter((r) => {
       if (purpose !== 'all' && r.purpose !== purpose) return false
+      if (typeFilter !== 'all' && (typeFilter === 'none' ? r.fabric_type_id : r.fabric_type_id !== typeFilter)) return false
       if (!q) return true
-      return [r.fabric_name, r.color, r.supplier]
+      return [r.fabric_name, r.color, r.supplier, typeName(r.fabric_type_id)]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q))
     })
-  }, [rows, search, purpose])
+  }, [rows, search, purpose, typeFilter, fabricTypes.data])
 
   const summary = [
     { label: 'Stock in', value: meters(totals.bought) },
@@ -149,6 +153,17 @@ export function StockPage() {
             { value: 'all', label: 'All drops' },
             ...(drops.data ?? []).map((d) => ({ value: d.id, label: d.name })),
             { value: 'none', label: 'No drop' },
+          ]}
+        />
+        <Combobox
+          className="w-48"
+          value={typeFilter}
+          onChange={setTypeFilter}
+          ariaLabel="Filter by fabric type"
+          options={[
+            { value: 'all', label: 'All fabric types' },
+            ...(fabricTypes.data ?? []).map((t) => ({ value: t.id, label: t.name })),
+            { value: 'none', label: 'No type' },
           ]}
         />
         <Combobox
@@ -220,7 +235,7 @@ export function StockPage() {
                           {r.fabric_name}
                         </Link>
                         <p className="text-xs text-stone-500">
-                          {r.color || 'No color'}
+                          {[typeName(r.fabric_type_id), r.width_inches ? `${r.width_inches} in` : null, r.color].filter(Boolean).join(', ') || 'No color'}
                         </p>
                       </Td>
                       <Td>{drop ? <Badge tone="maroon">{drop}</Badge> : <span className="text-stone-400">-</span>}</Td>

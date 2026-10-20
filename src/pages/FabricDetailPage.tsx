@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { useCanEdit, useDrops, useStock, useStockIn, useUsage } from '../lib/queries'
+import { useCanEdit, useDrops, useFabricTypes, useStock, useStockIn, useUsage } from '../lib/queries'
 import { meters, plain, rupees, shortDate } from '../lib/format'
 import {
   Badge,
@@ -19,6 +19,7 @@ export function FabricDetailPage({ fabricId }: { fabricId: string }) {
   const stockIn = useStockIn()
   const usage = useUsage()
   const drops = useDrops()
+  const fabricTypes = useFabricTypes()
   const canEdit = useCanEdit()
 
   if (stock.isLoading) return <Loading />
@@ -70,7 +71,15 @@ export function FabricDetailPage({ fabricId }: { fabricId: string }) {
             </h1>
             {dropName ? <Badge tone="maroon">{dropName}</Badge> : null}
           </div>
-          <p className="mt-1 text-[15px] text-stone-500">{fabric.color || 'No color'}</p>
+          <p className="mt-1 text-[15px] text-stone-500">
+            {[
+              fabricTypes.data?.find((t) => t.id === fabric.fabric_type_id)?.name,
+              fabric.width_inches ? `${fabric.width_inches} in wide` : null,
+              fabric.color,
+            ]
+              .filter(Boolean)
+              .join(', ') || 'No color'}
+          </p>
           {fabric.notes ? <p className="mt-2 max-w-xl text-sm text-stone-600">{fabric.notes}</p> : null}
 
           <div className="mt-5 max-w-md">
