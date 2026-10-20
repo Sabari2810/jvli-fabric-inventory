@@ -250,3 +250,7 @@ grant select, insert, update, delete on public.fabric_types to authenticated;
 alter table public.fabric_lots add column if not exists fabric_type_id uuid references public.fabric_types(id) on delete set null;
 alter table public.fabric_lots add column if not exists width_inches numeric(5,1) check (width_inches is null or width_inches > 0);
 -- fabric_stock also exposes l.fabric_type_id and l.width_inches as its last two columns.
+
+alter table public.suppliers add column if not exists phone text;
+alter table public.suppliers add column if not exists location text;
+alter table public.suppliers add column if not exists notes text;

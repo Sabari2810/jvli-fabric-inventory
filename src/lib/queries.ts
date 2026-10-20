@@ -3,6 +3,7 @@ import { supabase } from './supabase'
 import type {
   Drop,
   Supplier,
+  SupplierInput,
   FabricType,
   FabricInput,
   FabricStock,
@@ -132,6 +133,51 @@ export function useAddSupplier() {
         throw new Error(error.message)
       }
       return data as Supplier
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.suppliers }),
+  })
+}
+
+export function useSaveSupplier() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, oldName, input }: { id?: string; oldName?: string; input: SupplierInput }) => {
+      if (!id) {
+        const { error } = await supabase.from('suppliers').insert(input)
+        if (error) {
+          if (error.code === '23505') throw new Error('A supplier with that name already exists.')
+          throw new Error(error.message)
+        }
+        return
+      }
+      const { error } = await supabase.from('suppliers').update(input).eq('id', id)
+      if (error) {
+        if (error.code === '23505') throw new Error('A supplier with that name already exists.')
+        throw new Error(error.message)
+      }
+      // Stock in entries keep the supplier name, so carry a rename over to them.
+      if (oldName && oldName !== input.name) {
+        const { error: moveError } = await supabase
+          .from('fabric_stock_in')
+          .update({ supplier: input.name })
+          .eq('supplier', oldName)
+        if (moveError) throw new Error(moveError.message)
+      }
+    },
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: KEYS.suppliers })
+      await qc.invalidateQueries({ queryKey: KEYS.stockIn })
+      await qc.invalidateQueries({ queryKey: KEYS.stock })
+    },
+  })
+}
+
+export function useDeleteSupplier() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('suppliers').delete().eq('id', id)
+      if (error) throw new Error(error.message)
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.suppliers }),
   })

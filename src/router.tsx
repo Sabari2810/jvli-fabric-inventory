@@ -5,6 +5,8 @@ import { StockPage } from './pages/StockPage'
 import { DropDetailPage } from './pages/DropDetailPage'
 import { DropsPage } from './pages/DropsPage'
 import { FabricDetailPage } from './pages/FabricDetailPage'
+import { SupplierDetailPage } from './pages/SupplierDetailPage'
+import { SuppliersPage } from './pages/SuppliersPage'
 import { StockInPage } from './pages/StockInPage'
 import { UsagePage } from './pages/UsagePage'
 
@@ -63,6 +65,23 @@ function DropRouteComponent() {
   return <DropDetailPage key={dropId} dropId={dropId} />
 }
 
+const suppliersRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/suppliers',
+  component: SuppliersPage,
+})
+
+const supplierRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/suppliers/$supplierId',
+  component: SupplierRouteComponent,
+})
+
+function SupplierRouteComponent() {
+  const { supplierId } = supplierRoute.useParams()
+  return <SupplierDetailPage key={supplierId} supplierId={supplierId} />
+}
+
 const usageRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/out',
@@ -79,7 +98,7 @@ function UsageRouteComponent() {
 
 const routeTree = rootRoute.addChildren([
   loginRoute,
-  appRoute.addChildren([stockRoute, fabricRoute, dropsRoute, dropRoute, stockInRoute, usageRoute]),
+  appRoute.addChildren([stockRoute, fabricRoute, dropsRoute, dropRoute, suppliersRoute, supplierRoute, stockInRoute, usageRoute]),
 ])
 
 export const router = createRouter({ routeTree })

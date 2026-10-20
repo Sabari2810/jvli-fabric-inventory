@@ -6,6 +6,7 @@ import { Icon, Loading } from './ui'
 const items = [
   { to: '/', label: 'Stock', icon: 'stock', exact: true },
   { to: '/drops', label: 'Drops', icon: 'drop', exact: false },
+  { to: '/suppliers', label: 'Suppliers', icon: 'people', exact: false },
   { to: '/in', label: 'Stock in', icon: 'purchase', exact: false },
   { to: '/out', label: 'Stock out', icon: 'cut', exact: false },
 ] as const

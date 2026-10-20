@@ -35,7 +35,17 @@ export interface FabricStock {
 export interface Supplier {
   id: string
   name: string
+  phone: string | null
+  location: string | null
+  notes: string | null
   created_at: string
+}
+
+export interface SupplierInput {
+  name: string
+  phone: string | null
+  location: string | null
+  notes: string | null
 }
 
 export interface FabricType {
