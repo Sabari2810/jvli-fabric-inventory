@@ -58,7 +58,6 @@ export function StyleDrawer({
       stitching: show(style?.stitching),
       misc: show(style?.misc),
       profit: show(style?.profit),
-      gst: show(style?.gst),
       shipping: show(style?.shipping),
     })
     setPlanned(show(style?.planned_qty))
@@ -90,7 +89,6 @@ export function StyleDrawer({
     stitching: money('stitching'),
     misc: money('misc'),
     profit: money('profit'),
-    gst: money('gst'),
     shipping: money('shipping'),
   })
 
@@ -140,7 +138,7 @@ export function StyleDrawer({
           stitching: money('stitching'),
           misc: money('misc'),
           profit: money('profit'),
-          gst: money('gst'),
+          gst: calc.gst,
           shipping: money('shipping'),
           planned_qty: planned ? Number(planned) : null,
           final_price: finalPrice ? Number(finalPrice) : null,
@@ -210,7 +208,6 @@ export function StyleDrawer({
           {numberField('stitching', 'Stitching')}
           {numberField('misc', 'Misc')}
           {numberField('profit', 'Profit')}
-          {numberField('gst', 'GST')}
           {numberField('shipping', 'Shipping')}
           <Field label="Planned pieces">
             <input type="number" inputMode="numeric" min="0" className={inputClass} value={planned} onChange={(e) => setPlanned(e.target.value)} />
@@ -221,10 +218,14 @@ export function StyleDrawer({
           <input className={inputClass} value={notes} onChange={(e) => setNotes(e.target.value)} />
         </Field>
 
-        <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-stone-200 bg-stone-200">
+        <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-stone-200 bg-stone-200">
           <div className="bg-stone-50 p-4">
             <dt className="text-xs text-stone-500">Raw material</dt>
             <dd className="mt-0.5 whitespace-nowrap font-display text-lg font-semibold tabular-nums">{rupees(calc.raw)}</dd>
+          </div>
+          <div className="bg-stone-50 p-4">
+            <dt className="text-xs text-stone-500">GST ({Math.round(calc.rate * 100)}%)</dt>
+            <dd className="mt-0.5 whitespace-nowrap font-display text-lg font-semibold tabular-nums">{rupees(calc.gst)}</dd>
           </div>
           <div className="bg-stone-50 p-4">
             <dt className="text-xs text-stone-500">Calculated price</dt>

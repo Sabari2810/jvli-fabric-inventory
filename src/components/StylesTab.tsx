@@ -150,7 +150,7 @@ export function StylesTab({ dropId }: { dropId: string }) {
                       ['Stitching', rupees(s.stitching)],
                       ['Misc', rupees(s.misc)],
                       ['Profit', rupees(s.profit)],
-                      ['GST', rupees(s.gst)],
+                      [`GST ${Math.round(c.rate * 100)}%`, rupees(c.gst)],
                       ['Shipping', rupees(s.shipping)],
                     ].map(([k, v]) => (
                       <div key={k} className="flex justify-between gap-3">
@@ -255,7 +255,7 @@ export function StylesTab({ dropId }: { dropId: string }) {
                       <Td align="right">{rupees(s.stitching)}</Td>
                       <Td align="right">{rupees(s.misc)}</Td>
                       <Td align="right">{rupees(s.profit)}</Td>
-                      <Td align="right">{rupees(s.gst)}</Td>
+                      <Td align="right">{rupees(c.gst)}</Td>
                       <Td align="right">{rupees(s.shipping)}</Td>
                       <Td align="right" className="text-stone-600">
                         {rupees(c.mrp)}
