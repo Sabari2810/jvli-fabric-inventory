@@ -30,6 +30,12 @@ export interface FabricStock {
   meters_left: number
 }
 
+export interface Supplier {
+  id: string
+  name: string
+  created_at: string
+}
+
 export interface FabricInput {
   fabric_name: string
   color: string | null

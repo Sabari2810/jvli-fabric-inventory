@@ -19,6 +19,8 @@ export function Combobox({
   className = 'w-full',
   disabled = false,
   ariaLabel,
+  onCreate,
+  createLabel = 'Add new',
 }: {
   value: string
   onChange: (value: string) => void
@@ -27,6 +29,8 @@ export function Combobox({
   className?: string
   disabled?: boolean
   ariaLabel?: string
+  onCreate?: (name: string) => void
+  createLabel?: string
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -55,6 +59,24 @@ export function Combobox({
   function close() {
     setOpen(false)
     buttonRef.current?.focus()
+  }
+
+  const trimmed = query.trim()
+  const canCreate =
+    !!onCreate && !options.some((o) => o.label.trim().toLowerCase() === trimmed.toLowerCase())
+  const createText = trimmed ? `${createLabel} "${trimmed}"` : createLabel
+  const total = filtered.length + (canCreate ? 1 : 0)
+
+  function create() {
+    if (!onCreate) return
+    const name = trimmed
+    if (!name) {
+      // Nothing typed yet: put the cursor back in the search box so the name can be typed.
+      document.getElementById('combobox-search')?.focus()
+      return
+    }
+    onCreate(name)
+    close()
   }
 
   function pick(o: Option) {
@@ -91,14 +113,14 @@ export function Combobox({
   function onKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setActive((a) => Math.min(filtered.length - 1, a + 1))
+      setActive((a) => Math.min(total - 1, a + 1))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setActive((a) => Math.max(0, a - 1))
     } else if (e.key === 'Enter') {
       e.preventDefault()
-      const o = filtered[active]
-      if (o) pick(o)
+      if (active >= filtered.length) create()
+      else if (filtered[active]) pick(filtered[active])
     } else if (e.key === 'Escape') {
       e.preventDefault()
       e.stopPropagation()
@@ -133,6 +155,7 @@ export function Combobox({
               <div className="border-b border-stone-100 p-2">
                 <input
                   autoFocus
+                  id="combobox-search"
                   value={query}
                   onChange={(e) => {
                     setQuery(e.target.value)
@@ -144,7 +167,7 @@ export function Combobox({
                 />
               </div>
               <ul ref={listRef} role="listbox" className="max-h-64 overflow-y-auto p-1">
-                {filtered.length === 0 ? (
+                {filtered.length === 0 && !canCreate ? (
                   <li className="px-3 py-3 text-sm text-stone-500">Nothing found</li>
                 ) : (
                   filtered.map((o, i) => (
@@ -164,6 +187,21 @@ export function Combobox({
                     </li>
                   ))
                 )}
+                {canCreate ? (
+                  <li
+                    role="option"
+                    aria-selected={false}
+                    onMouseEnter={() => setActive(filtered.length)}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={create}
+                    className={`mt-1 flex cursor-pointer items-center gap-2 rounded-lg border-t border-stone-100 px-3 py-2 text-sm font-semibold text-maroon-900 ${
+                      active === filtered.length ? 'bg-maroon-50' : ''
+                    }`}
+                  >
+                    <span aria-hidden="true">+</span>
+                    <span className="truncate">{createText}</span>
+                  </li>
+                ) : null}
               </ul>
             </div>,
             document.body,

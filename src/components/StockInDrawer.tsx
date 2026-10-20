@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useAddStockIn, useStock, useUpdateStockIn } from '../lib/queries'
+import { useAddStockIn, useAddSupplier, useStock, useSuppliers, useUpdateStockIn } from '../lib/queries'
 import { plain, todayISO } from '../lib/format'
 import type { Purpose, StockIn } from '../lib/types'
 import { Combobox } from './Combobox'
@@ -20,6 +20,8 @@ export function StockInDrawer({
   const stock = useStock()
   const addEntry = useAddStockIn()
   const updateEntry = useUpdateStockIn()
+  const suppliers = useSuppliers()
+  const addSupplier = useAddSupplier()
 
   const [lotId, setLotId] = useState('')
   const [date, setDate] = useState(todayISO())
@@ -132,11 +134,26 @@ export function StockInDrawer({
           </Field>
         </div>
         <Field label="Supplier">
-          <input
-            placeholder="Supplier name"
-            className={inputClass}
+          <Combobox
             value={supplier}
-            onChange={(e) => setSupplier(e.target.value)}
+            onChange={setSupplier}
+            placeholder="Select a supplier"
+            createLabel="Add supplier"
+            onCreate={async (name) => {
+              try {
+                const s = await addSupplier.mutateAsync(name)
+                setSupplier(s.name)
+              } catch (err) {
+                setError(err instanceof Error ? err.message : 'Could not add the supplier.')
+              }
+            }}
+            options={[
+              { value: '', label: 'No supplier' },
+              ...(suppliers.data ?? []).map((s) => ({ value: s.name, label: s.name })),
+              ...(supplier && !(suppliers.data ?? []).some((s) => s.name === supplier)
+                ? [{ value: supplier, label: supplier }]
+                : []),
+            ]}
           />
         </Field>
         <Field label="Notes">

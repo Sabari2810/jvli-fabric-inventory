@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from './supabase'
 import type {
   Drop,
+  Supplier,
   FabricInput,
   FabricStock,
   FabricUsage,
@@ -15,6 +16,7 @@ const KEYS = {
   stockIn: ['stock-in'] as const,
   usage: ['usage'] as const,
   drops: ['drops'] as const,
+  suppliers: ['suppliers'] as const,
 }
 
 export function useStock() {
@@ -97,6 +99,39 @@ export function useAddDrop() {
       return data as Drop
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.drops }),
+  })
+}
+
+export function useSuppliers() {
+  return useQuery({
+    queryKey: KEYS.suppliers,
+    queryFn: async (): Promise<Supplier[]> => {
+      const { data, error } = await supabase.from('suppliers').select('*').order('name')
+      if (error) throw new Error(error.message)
+      return (data ?? []) as Supplier[]
+    },
+  })
+}
+
+export function useAddSupplier() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (name: string): Promise<Supplier> => {
+      const { data, error } = await supabase.from('suppliers').insert({ name }).select().single()
+      if (error) {
+        if (error.code === '23505') {
+          const { data: existing } = await supabase
+            .from('suppliers')
+            .select('*')
+            .ilike('name', name)
+            .single()
+          if (existing) return existing as Supplier
+        }
+        throw new Error(error.message)
+      }
+      return data as Supplier
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.suppliers }),
   })
 }
 

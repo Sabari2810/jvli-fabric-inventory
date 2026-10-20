@@ -202,3 +202,15 @@ revoke all on public.fabric_stock_in from anon;
 grant select, insert, update, delete on public.fabric_stock_in to authenticated;
 alter table public.fabric_lots alter column meters_bought drop not null;
 alter table public.fabric_lots alter column purpose drop not null;
+
+-- Suppliers list used by the supplier pick list (stock in entries store the supplier name).
+create table if not exists public.suppliers (
+  id uuid primary key default gen_random_uuid(),
+  name text not null check (length(trim(name)) > 0),
+  created_at timestamptz not null default now()
+);
+create unique index if not exists suppliers_name_unique on public.suppliers (lower(trim(name)));
+alter table public.suppliers enable row level security;
+create policy "suppliers: authenticated full access" on public.suppliers for all to authenticated using (true) with check (true);
+revoke all on public.suppliers from anon;
+grant select, insert, update, delete on public.suppliers to authenticated;
