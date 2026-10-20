@@ -62,6 +62,16 @@ export function SupplierDetailPage({ supplierId }: { supplierId: string }) {
       <p className="mt-1.5 text-[15px] text-stone-500">
         {[supplier.phone, supplier.location].filter(Boolean).join(', ') || 'No contact details yet'}
       </p>
+      {supplier.website ? (
+        <a
+          href={supplier.website}
+          target="_blank"
+          rel="noreferrer"
+          className={`${linkButton} mt-2 inline-block`}
+        >
+          {supplier.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
+        </a>
+      ) : null}
       {supplier.notes ? <p className="mt-2 max-w-xl text-sm text-stone-600">{supplier.notes}</p> : null}
 
       <dl className="my-8 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-stone-200/80 bg-stone-200/80 sm:grid-cols-3 lg:grid-cols-5">

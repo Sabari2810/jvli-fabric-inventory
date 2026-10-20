@@ -27,6 +27,12 @@ import {
   subtleButton,
 } from '../components/ui'
 
+function normalizeUrl(value: string): string | null {
+  const v = value.trim()
+  if (!v) return null
+  return /^https?:\/\//i.test(v) ? v : `https://${v}`
+}
+
 export function SuppliersPage() {
   const suppliers = useSuppliers()
   const stockIn = useStockIn()
@@ -39,6 +45,7 @@ export function SuppliersPage() {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [location, setLocation] = useState('')
+  const [website, setWebsite] = useState('')
   const [notes, setNotes] = useState('')
   const [error, setError] = useState<string | null>(null)
 
@@ -62,6 +69,7 @@ export function SuppliersPage() {
     setName(s?.name ?? '')
     setPhone(s?.phone ?? '')
     setLocation(s?.location ?? '')
+    setWebsite(s?.website ?? '')
     setNotes(s?.notes ?? '')
     setError(null)
     setOpen(true)
@@ -79,6 +87,7 @@ export function SuppliersPage() {
           name: value,
           phone: phone.trim() || null,
           location: location.trim() || null,
+          website: normalizeUrl(website),
           notes: notes.trim() || null,
         },
       })
@@ -145,6 +154,7 @@ export function SuppliersPage() {
                   <Th>Supplier</Th>
                   <Th>Phone</Th>
                   <Th>Location</Th>
+                  <Th>Website</Th>
                   <Th align="right">Entries</Th>
                   <Th align="right">Meters bought</Th>
                   <Th align="right">Spent</Th>
@@ -168,6 +178,20 @@ export function SuppliersPage() {
                       </Td>
                       <Td className="whitespace-nowrap text-stone-600">{s.phone || '-'}</Td>
                       <Td className="text-stone-600">{s.location || '-'}</Td>
+                      <Td>
+                        {s.website ? (
+                          <a
+                            href={s.website}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={linkButton}
+                          >
+                            {s.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
+                          </a>
+                        ) : (
+                          <span className="text-stone-400">-</span>
+                        )}
+                      </Td>
                       <Td align="right">{t?.entries ?? 0}</Td>
                       <Td align="right">{meters(t?.meters ?? 0)}</Td>
                       <Td align="right" className="font-semibold">
@@ -223,6 +247,16 @@ export function SuppliersPage() {
               />
             </Field>
           </div>
+          <Field label="Website">
+            <input
+              type="text"
+              inputMode="url"
+              placeholder="www.example.com"
+              className={inputClass}
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+            />
+          </Field>
           <Field label="Notes">
             <input
               placeholder="Minimum order, what they supply"

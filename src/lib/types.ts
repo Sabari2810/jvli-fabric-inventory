@@ -37,6 +37,7 @@ export interface Supplier {
   name: string
   phone: string | null
   location: string | null
+  website: string | null
   notes: string | null
   created_at: string
 }
@@ -45,6 +46,7 @@ export interface SupplierInput {
   name: string
   phone: string | null
   location: string | null
+  website: string | null
   notes: string | null
 }
 

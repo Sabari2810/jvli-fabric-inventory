@@ -254,3 +254,4 @@ alter table public.fabric_lots add column if not exists width_inches numeric(5,1
 alter table public.suppliers add column if not exists phone text;
 alter table public.suppliers add column if not exists location text;
 alter table public.suppliers add column if not exists notes text;
+alter table public.suppliers add column if not exists website text;
