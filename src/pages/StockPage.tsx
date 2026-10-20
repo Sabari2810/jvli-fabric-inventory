@@ -205,6 +205,9 @@ export function StockPage() {
                         <Link to="/usage" search={{ lot: r.id }} className={`${linkButton} mr-4`}>
                           Log usage
                         </Link>
+                        <Link to="/lots" search={{ restock: r.id }} className={`${linkButton} mr-4`}>
+                          Add meters
+                        </Link>
                         <Link to="/lots" search={{ edit: r.id }} className="text-sm text-stone-500 hover:text-ink">
                           Edit
                         </Link>

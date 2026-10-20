@@ -115,6 +115,30 @@ export function useUpdateLot() {
   })
 }
 
+export function useAddMeters() {
+  const refresh = useRefreshAll()
+  return useMutation({
+    mutationFn: async ({ id, meters, rate }: { id: string; meters: number; rate: number }) => {
+      const { data: lot, error: readError } = await supabase
+        .from('fabric_lots')
+        .select('meters_bought, rate_per_meter')
+        .eq('id', id)
+        .single()
+      if (readError) throw new Error(readError.message)
+      const bought = Number(lot.meters_bought)
+      const total = bought + meters
+      // Keep the rate as the average price paid per meter across both buys.
+      const average = (bought * Number(lot.rate_per_meter) + meters * rate) / total
+      const { error } = await supabase
+        .from('fabric_lots')
+        .update({ meters_bought: total, rate_per_meter: Math.round(average * 100) / 100 })
+        .eq('id', id)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: refresh,
+  })
+}
+
 export function useUpdateUsage() {
   const refresh = useRefreshAll()
   return useMutation({

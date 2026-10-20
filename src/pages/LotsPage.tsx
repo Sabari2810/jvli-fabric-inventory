@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import {
   useAddDrop,
+  useAddMeters,
   useAddLot,
   useDeleteLot,
   useDrops,
@@ -55,7 +56,7 @@ const emptyForm = (): FormState => ({
   drop_id: '',
 })
 
-export function LotsPage({ editId }: { editId?: string }) {
+export function LotsPage({ editId, restockId }: { editId?: string; restockId?: string }) {
   const { data, isLoading, error } = useLots()
   const addLot = useAddLot()
   const updateLot = useUpdateLot()
@@ -63,6 +64,11 @@ export function LotsPage({ editId }: { editId?: string }) {
   const addDrop = useAddDrop()
   const setLotDrop = useSetLotDrop()
   const deleteLot = useDeleteLot()
+  const addMeters = useAddMeters()
+  const [restock, setRestock] = useState<FabricLot | null>(null)
+  const [moreMeters, setMoreMeters] = useState('')
+  const [moreRate, setMoreRate] = useState('')
+  const [restockError, setRestockError] = useState<string | null>(null)
 
   const [open, setOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -101,16 +107,38 @@ export function LotsPage({ editId }: { editId?: string }) {
     setOpen(true)
   }
 
-  // Arriving from "Edit purchase" on the stock page opens that purchase once.
+  function startRestock(l: FabricLot) {
+    setRestock(l)
+    setMoreMeters('')
+    setMoreRate(String(l.rate_per_meter))
+    setRestockError(null)
+  }
+
+  async function onRestock(e: FormEvent) {
+    e.preventDefault()
+    if (!restock) return
+    const m = Number(moreMeters)
+    const r = Number(moreRate)
+    if (!Number.isFinite(m) || m <= 0) return setRestockError('Meters added must be more than 0.')
+    if (!Number.isFinite(r) || r < 0) return setRestockError('Enter the rate for these meters.')
+    try {
+      await addMeters.mutateAsync({ id: restock.id, meters: m, rate: r })
+      setRestock(null)
+    } catch (err) {
+      setRestockError(err instanceof Error ? err.message : 'Could not add the meters.')
+    }
+  }
+
+  // Arriving from the stock page opens that purchase once, to edit or to add meters.
   const opened = useRef(false)
   useEffect(() => {
-    if (!editId || opened.current || !data) return
-    const lot = data.find((l) => l.id === editId)
-    if (lot) {
-      opened.current = true
-      startEdit(lot)
-    }
-  }, [editId, data])
+    if (opened.current || !data) return
+    const target = data.find((l) => l.id === (editId ?? restockId))
+    if (!target) return
+    opened.current = true
+    if (restockId) startRestock(target)
+    else startEdit(target)
+  }, [editId, restockId, data])
 
   async function handleImageFile(file: File) {
     setFormError(null)
@@ -194,6 +222,13 @@ export function LotsPage({ editId }: { editId?: string }) {
   }
 
   const lots = data ?? []
+  const existing = form.fabric_name.trim()
+    ? lots.find(
+        (l) =>
+          l.fabric_name.trim().toLowerCase() === form.fabric_name.trim().toLowerCase() &&
+          (l.color ?? '').trim().toLowerCase() === form.color.trim().toLowerCase(),
+      )
+    : undefined
   const saving = addLot.isPending || updateLot.isPending
 
   return (
@@ -286,6 +321,9 @@ export function LotsPage({ editId }: { editId?: string }) {
                       {rupees(Number(l.meters_bought) * Number(l.rate_per_meter))}
                     </Td>
                     <Td align="right" className="whitespace-nowrap">
+                      <button type="button" className={`${linkButton} mr-4`} onClick={() => startRestock(l)}>
+                        Add meters
+                      </button>
                       <button type="button" className={`${linkButton} mr-4`} onClick={() => startEdit(l)}>
                         Edit
                       </button>
@@ -305,6 +343,69 @@ export function LotsPage({ editId }: { editId?: string }) {
           </div>
         ) : null}
       </Card>
+
+      <Drawer
+        open={!!restock}
+        title="Add meters"
+        onClose={() => setRestock(null)}
+      >
+        {restock ? (
+          <form onSubmit={onRestock} className="space-y-5">
+            <div className="flex items-center gap-4 rounded-xl bg-stone-50 p-4">
+              <Thumb src={restock.image_data} name={restock.fabric_name} className="h-14 w-14" />
+              <div className="min-w-0">
+                <p className="font-semibold text-ink">{restock.fabric_name}</p>
+                <p className="text-sm text-stone-500">
+                  {restock.color ? `${restock.color}, ` : ''}
+                  {meters(restock.meters_bought)} bought so far at {rupees(restock.rate_per_meter)} a meter
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Meters added">
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  min="0"
+                  required
+                  autoFocus
+                  className={inputClass}
+                  value={moreMeters}
+                  onChange={(e) => setMoreMeters(e.target.value)}
+                />
+              </Field>
+              <Field label="Rate per meter (INR)">
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  min="0"
+                  required
+                  className={inputClass}
+                  value={moreRate}
+                  onChange={(e) => setMoreRate(e.target.value)}
+                />
+              </Field>
+            </div>
+            {Number(moreMeters) > 0 ? (
+              <p className="text-sm text-stone-600">
+                New total: {meters(Number(restock.meters_bought) + Number(moreMeters))}. The rate becomes the
+                average of both buys.
+              </p>
+            ) : null}
+            <ErrorNote message={restockError} />
+            <div className="flex gap-3 border-t border-stone-100 pt-5">
+              <button type="submit" disabled={addMeters.isPending} className={primaryButton}>
+                {addMeters.isPending ? 'Saving' : 'Add meters'}
+              </button>
+              <button type="button" className={subtleButton} onClick={() => setRestock(null)}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : null}
+      </Drawer>
 
       <Drawer
         open={open}
@@ -358,6 +459,21 @@ export function LotsPage({ editId }: { editId?: string }) {
               onChange={(e) => set('fabric_name', e.target.value)}
             />
           </Field>
+          {!editingId && existing ? (
+            <div className="rounded-lg border border-maroon-200 bg-maroon-50 px-3 py-2.5 text-sm text-maroon-900">
+              You already have this fabric ({meters(existing.meters_bought)}).{' '}
+              <button
+                type="button"
+                className="font-semibold underline underline-offset-4"
+                onClick={() => {
+                  setOpen(false)
+                  startRestock(existing)
+                }}
+              >
+                Add meters to it instead
+              </button>
+            </div>
+          ) : null}
           <div className="grid grid-cols-2 gap-4">
             <Field label="Color">
               <input
