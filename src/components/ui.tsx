@@ -229,7 +229,7 @@ export function Td({
 }) {
   return (
     <td
-      className={`px-4 py-3.5 text-sm ${align === 'right' ? 'text-right tabular-nums' : 'text-left'} ${className}`}
+      className={`px-4 py-3.5 text-sm ${align === 'right' ? 'whitespace-nowrap text-right tabular-nums' : 'text-left'} ${className}`}
     >
       {children}
     </td>
