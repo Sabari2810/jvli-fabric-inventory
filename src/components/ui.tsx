@@ -114,9 +114,8 @@ export function Drawer({
   return (
     <div className="fixed inset-0 z-50" style={overlay} role="dialog" aria-modal="true" aria-label={title}>
       <div className="absolute inset-0 animate-fade-in bg-ink/40" onClick={onClose} />
-      <aside className="absolute inset-x-0 bottom-0 flex max-h-[92%] animate-sheet-in flex-col rounded-t-3xl bg-white shadow-2xl md:inset-x-auto md:inset-y-0 md:right-0 md:max-h-none md:w-full md:max-w-lg md:animate-drawer-in md:rounded-none">
-        <div className="mx-auto mt-3 h-1 w-10 shrink-0 rounded-full bg-stone-300 md:hidden" />
-        <div className="flex items-center justify-between border-b border-stone-200 px-5 py-3 md:px-6 md:py-4">
+      <aside className="absolute inset-0 flex animate-sheet-in flex-col bg-white shadow-2xl md:inset-x-auto md:inset-y-0 md:right-0 md:w-full md:max-w-lg md:animate-drawer-in">
+        <div className="flex shrink-0 items-center justify-between border-b border-stone-200 px-5 py-3 md:px-6 md:py-4">
           <h2 className="font-display text-xl font-semibold text-ink">{title}</h2>
           <button
             type="button"
