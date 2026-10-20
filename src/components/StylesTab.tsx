@@ -108,7 +108,6 @@ export function StylesTab({ dropId }: { dropId: string }) {
             <table className="min-w-full divide-y divide-stone-100">
               <thead>
                 <tr>
-                  <Th>Reference</Th>
                   <Th>Pattern</Th>
                   <Th className="sticky left-0 z-10 bg-white shadow-[1px_0_0_0_#e7e5e4]">Fabric</Th>
                   <Th align="right">Fabric</Th>
@@ -132,12 +131,9 @@ export function StylesTab({ dropId }: { dropId: string }) {
                   return (
                     <tr key={s.id} className="group transition hover:bg-stone-50/70">
                       <Td>
-                        <Thumb src={s.reference_image} name="Reference" className="h-16 w-12" />
-                      </Td>
-                      <Td>
                         <div className="flex items-center gap-3">
                           <Thumb
-                            src={patternBy.get(s.pattern_id)?.image_data}
+                            src={patternBy.get(s.pattern_id)?.image_data ?? s.reference_image}
                             name="Pattern"
                             className="h-16 w-12"
                           />

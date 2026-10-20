@@ -40,7 +40,6 @@ export function StyleDrawer({
   const [notes, setNotes] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [pasteTarget, setPasteTarget] = useState<'swatch' | 'reference'>('swatch')
 
   useEffect(() => {
     if (!open) return
@@ -64,7 +63,6 @@ export function StyleDrawer({
     setPlanned(show(style?.planned_qty))
     setNotes(style?.notes ?? '')
     setError(null)
-    setPasteTarget('swatch')
   }, [open, style])
 
   const patternOptions = (patterns.data ?? []).map((p) => ({ value: p.id, label: p.pattern_no }))
@@ -105,7 +103,6 @@ export function StyleDrawer({
         lining_usage_m: prev.lining_usage_m || show(p.lining_usage_m),
       }))
     }
-    if (!reference) setReference(p.image_data)
   }
 
   function pickFabric(id: string) {
@@ -165,30 +162,15 @@ export function StyleDrawer({
           <Combobox value={patternId} onChange={pickPattern} options={patternOptions} placeholder="Pick a pattern" />
         </Field>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div onClickCapture={() => setPasteTarget('reference')}>
-            <PhotoField
-              label="Reference picture"
-              inputId="style-reference"
-              value={reference}
-              onChange={setReference}
-              onError={setError}
-              active={open && pasteTarget === 'reference'}
-              onBusy={setBusy}
-            />
-          </div>
-          <div onClickCapture={() => setPasteTarget('swatch')}>
-            <PhotoField
-              label="Fabric swatch"
-              inputId="style-swatch"
-              value={swatch}
-              onChange={setSwatch}
-              onError={setError}
-              active={open && pasteTarget === 'swatch'}
-              onBusy={setBusy}
-            />
-          </div>
-        </div>
+        <PhotoField
+          label="Fabric swatch"
+          inputId="style-swatch"
+          value={swatch}
+          onChange={setSwatch}
+          onError={setError}
+          active={open}
+          onBusy={setBusy}
+        />
 
         <Field label="Fabric from stock" hint="Optional. Links this style to a fabric you already bought.">
           <Combobox value={fabricId} onChange={pickFabric} options={fabricOptions} placeholder="Pick a fabric" />
