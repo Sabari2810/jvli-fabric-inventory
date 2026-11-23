@@ -395,7 +395,7 @@ export function Stats({ items }: { items: { label: string; value: ReactNode; str
           <dd
             className={`whitespace-pre-line text-sm font-semibold tabular-nums ${i.strong ? 'text-maroon-900' : 'text-ink'}`}
           >
-            {i.value.replace(' + ', '\n')}
+            {typeof i.value === 'string' ? i.value.replace(' + ', '\n') : i.value}
           </dd>
         </div>
       ))}
