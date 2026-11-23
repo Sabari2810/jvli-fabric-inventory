@@ -500,3 +500,32 @@ export function useDeleteStyle() {
     onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.styles }),
   })
 }
+
+export interface AuditEntry {
+  id: number
+  at: string
+  user_email: string | null
+  table_name: string
+  action: 'insert' | 'update' | 'delete'
+  row_id: string | null
+  label: string | null
+  unit: 'm' | 'pcs' | null
+  old_data: Record<string, unknown> | null
+  new_data: Record<string, unknown> | null
+}
+
+/** The change history, newest first. `tables` limits it to some record types. */
+export function useHistory(opts: { tables: string[] | null; action: string | null; limit: number; rowId?: string | null }) {
+  return useQuery({
+    queryKey: ['history', opts.tables, opts.action, opts.limit, opts.rowId ?? null],
+    queryFn: async (): Promise<AuditEntry[]> => {
+      let q = supabase.from('audit_log').select('*').order('at', { ascending: false }).order('id', { ascending: false })
+      if (opts.tables) q = q.in('table_name', opts.tables)
+      if (opts.action) q = q.eq('action', opts.action)
+      if (opts.rowId) q = q.eq('row_id', opts.rowId)
+      const { data, error } = await q.limit(opts.limit)
+      if (error) throw new Error(error.message)
+      return (data ?? []) as AuditEntry[]
+    },
+  })
+}

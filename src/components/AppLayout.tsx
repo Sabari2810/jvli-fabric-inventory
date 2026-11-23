@@ -11,6 +11,7 @@ const items = [
   { to: '/patterns', label: 'Patterns', icon: 'scissors', exact: false },
   { to: '/fabric-types', label: 'Fabric types', icon: 'swatch', exact: false },
   { to: '/suppliers', label: 'Suppliers', icon: 'people', exact: false },
+  { to: '/history', label: 'History', icon: 'history', exact: false },
 ] as const
 
 const sideLink =
