@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useAddStockIn, useAddSupplier, useStock, useSuppliers, useUpdateStockIn } from '../lib/queries'
-import { qty, todayISO } from '../lib/format'
-import type { Purpose, StockIn } from '../lib/types'
+import { useAddStockIn, useAddSupplier, useSetFabricUnit, useStock, useSuppliers, useUpdateStockIn } from '../lib/queries'
+import { plain, qty, todayISO } from '../lib/format'
+import type { Purpose, StockIn, Unit } from '../lib/types'
 import { Combobox } from './Combobox'
 import { Drawer, ErrorNote, Field, inputClass, primaryButton, subtleButton } from './ui'
 
@@ -22,8 +22,10 @@ export function StockInDrawer({
   const updateEntry = useUpdateStockIn()
   const suppliers = useSuppliers()
   const addSupplier = useAddSupplier()
+  const setUnitMutation = useSetFabricUnit()
 
   const [lotId, setLotId] = useState('')
+  const [unit, setUnit] = useState<Unit>('m')
   const [date, setDate] = useState(todayISO())
   const [meterValue, setMeterValue] = useState('')
   const [rate, setRate] = useState('')
@@ -33,6 +35,12 @@ export function StockInDrawer({
   const [error, setError] = useState<string | null>(null)
 
   const fabrics = stock.data ?? []
+
+  // The Meters / Pieces choice follows the item picked, and can be changed here.
+  const pickedUnit = fabrics.find((f) => f.id === lotId)?.unit
+  useEffect(() => {
+    setUnit(pickedUnit ?? 'm')
+  }, [lotId, pickedUnit, open])
 
   useEffect(() => {
     if (!open) return
@@ -52,7 +60,7 @@ export function StockInDrawer({
     e.preventDefault()
     setError(null)
     const m = Number(meterValue)
-    const pieces = fabrics.find((f) => f.id === lotId)?.unit === 'pcs'
+    const pieces = unit === 'pcs'
     if (!lotId) return setError('Pick the fabric.')
     if (!Number.isFinite(m) || m <= 0) return setError(pieces ? 'Pieces must be more than 0.' : 'Meters must be more than 0.')
     if (pieces && !Number.isInteger(m)) return setError('Pieces must be a whole number.')
@@ -66,6 +74,8 @@ export function StockInDrawer({
       notes: notes.trim() || null,
     }
     try {
+      // Changing Meters / Pieces switches the whole item; its recorded numbers stay as they are.
+      if (pickedUnit && unit !== pickedUnit) await setUnitMutation.mutateAsync({ id: lotId, unit })
       if (entry) await updateEntry.mutateAsync({ id: entry.id, patch: payload })
       else await addEntry.mutateAsync(payload)
       onClose()
@@ -76,7 +86,9 @@ export function StockInDrawer({
 
   const saving = addEntry.isPending || updateEntry.isPending
   const selected = fabrics.find((f) => f.id === lotId)
-  const pieces = selected?.unit === 'pcs'
+  const pieces = unit === 'pcs'
+  const hasStock = !!selected && Number(selected.meters_bought) > 0
+  const unitChanged = !!selected && unit !== selected.unit
 
   return (
     <Drawer open={open} title={entry ? 'Edit stock in' : 'Stock in'} onClose={onClose}>
@@ -96,6 +108,41 @@ export function StockInDrawer({
               hint: `${qty(f.meters_left, f.unit)} left`,
             }))}
           />
+        </Field>
+        <Field
+          label="Counted in"
+          hint={
+            unitChanged && hasStock
+              ? `This switches all of ${selected?.fabric_name ?? 'this item'} to ${pieces ? 'pieces' : 'meters'}. The ${plain(selected?.meters_bought ?? 0)} already recorded stays the same number.`
+              : pieces
+                ? 'Whole pieces, for ready-made items such as a dupatta.'
+                : 'Meters, for fabric.'
+          }
+        >
+          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Counted in">
+            {(
+              [
+                ['m', 'Meters'],
+                ['pcs', 'Pieces'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={unit === value}
+                disabled={!!entry || !lotId}
+                onClick={() => setUnit(value)}
+                className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                  unit === value
+                    ? 'border-maroon-900 bg-maroon-50 text-maroon-900'
+                    : 'border-stone-300 bg-white text-stone-600 hover:border-stone-400'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </Field>
         <div className="grid grid-cols-2 gap-4">
           <Field label="Bought for">

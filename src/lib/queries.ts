@@ -272,6 +272,18 @@ export function useUpdateFabric() {
   })
 }
 
+/** Switch an item between meters and pieces (done from the Stock in form). Quantities stay as they are. */
+export function useSetFabricUnit() {
+  const refresh = useRefreshAll()
+  return useMutation({
+    mutationFn: async ({ id, unit }: { id: string; unit: 'm' | 'pcs' }) => {
+      const { error } = await supabase.from('fabric_lots').update({ unit }).eq('id', id)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: refresh,
+  })
+}
+
 export function useDeleteFabric() {
   const refresh = useRefreshAll()
   return useMutation({
