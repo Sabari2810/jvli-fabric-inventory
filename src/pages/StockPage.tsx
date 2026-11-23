@@ -176,8 +176,8 @@ export function StockPage() {
         <div className="flex items-baseline justify-between gap-3 p-4 sm:block sm:p-6 lg:p-8">
           <p className="text-sm text-maroon-200/80 sm:hidden">Left on the shelf</p>
           <p className="hidden text-sm text-maroon-200/80 sm:block">Left on the shelf</p>
-          <p className="font-display text-3xl font-bold tracking-tight tabular-nums sm:mt-1 sm:text-5xl">
-            {qtyMix(totals.left, totals.leftP, emptyUnit)}
+          <p className="whitespace-pre-line font-display text-3xl font-bold tracking-tight tabular-nums sm:mt-1 sm:text-5xl">
+            {qtyMix(totals.left, totals.leftP, emptyUnit).replace(' + ', '\n')}
           </p>
           <p className="hidden text-sm text-maroon-200/80 sm:mt-1 sm:block">across {rows.length} {rows.length === 1 ? 'fabric' : 'fabrics'}</p>
         </div>
@@ -188,7 +188,7 @@ export function StockPage() {
               className={`p-3 sm:p-5 lg:p-6 ${i > 0 ? 'sm:border-l sm:border-white/15' : ''}`}
             >
               <dt className="text-xs text-maroon-200/80 sm:text-sm">{s.label}</dt>
-              <dd className="mt-0.5 whitespace-nowrap font-display text-base font-semibold tabular-nums sm:mt-1 sm:text-xl">{s.value}</dd>
+              <dd className="mt-0.5 whitespace-pre-line font-display text-base font-semibold tabular-nums sm:mt-1 sm:text-xl">{s.value.replace(' + ', '\n')}</dd>
             </div>
           ))}
         </dl>

@@ -99,8 +99,8 @@ export function DropDetailPage({ dropId }: { dropId: string }) {
       <section className="mb-8 grid overflow-hidden rounded-2xl bg-maroon-900 text-white lg:grid-cols-[minmax(0,15rem)_1fr]">
         <div className="p-6 lg:p-8">
           <p className="text-sm text-maroon-200/80">Left on the shelf</p>
-          <p className="mt-1 whitespace-nowrap font-display text-5xl font-bold tracking-tight tabular-nums">
-            {qtyMix(t.left, t.leftP)}
+          <p className="mt-1 whitespace-pre-line font-display text-5xl font-bold tracking-tight tabular-nums">
+            {qtyMix(t.left, t.leftP).replace(' + ', '\n')}
           </p>
           <p className="mt-1 text-sm text-maroon-200/80">
             across {fabrics.length} {fabrics.length === 1 ? 'fabric' : 'fabrics'}
@@ -115,7 +115,7 @@ export function DropDetailPage({ dropId }: { dropId: string }) {
                 className={`p-5 lg:p-6 ${i % 4 !== 0 ? 'sm:border-l sm:border-white/15' : ''} ${i >= 4 ? 'sm:border-t sm:border-white/15' : ''}`}
               >
                 <dt className="text-sm text-maroon-200/80">{f.label}</dt>
-                <dd className="mt-1 whitespace-nowrap font-display text-xl font-semibold tabular-nums">{f.value}</dd>
+                <dd className="mt-1 whitespace-pre-line font-display text-xl font-semibold tabular-nums">{f.value.replace(' + ', '\n')}</dd>
               </div>
             ))}
         </dl>

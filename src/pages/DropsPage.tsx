@@ -143,15 +143,15 @@ export function DropsPage() {
                 <dl className="mt-4 grid grid-cols-3 gap-px overflow-hidden rounded-xl bg-stone-200/80 text-center">
                   <div className="bg-stone-50 py-2.5">
                     <dt className="text-xs text-stone-500">Stock in</dt>
-                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums">{qtyMix(t.bought, t.boughtP)}</dd>
+                    <dd className="whitespace-pre-line text-sm font-semibold tabular-nums">{qtyMix(t.bought, t.boughtP).replace(' + ', '\n')}</dd>
                   </div>
                   <div className="bg-stone-50 py-2.5">
                     <dt className="text-xs text-stone-500">Stock out</dt>
-                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums">{qtyMix(t.out, t.outP)}</dd>
+                    <dd className="whitespace-pre-line text-sm font-semibold tabular-nums">{qtyMix(t.out, t.outP).replace(' + ', '\n')}</dd>
                   </div>
                   <div className="bg-maroon-50 py-2.5">
                     <dt className="text-xs text-maroon-900/70">Left</dt>
-                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums text-maroon-900">{qtyMix(t.left, t.leftP)}</dd>
+                    <dd className="whitespace-pre-line text-sm font-semibold tabular-nums text-maroon-900">{qtyMix(t.left, t.leftP).replace(' + ', '\n')}</dd>
                   </div>
                 </dl>
                 {canEdit ? (

@@ -393,9 +393,9 @@ export function Stats({ items }: { items: { label: string; value: ReactNode; str
         <div key={i.label} className={`py-2.5 ${i.strong ? 'bg-maroon-50' : 'bg-stone-50'}`}>
           <dt className={`text-xs ${i.strong ? 'text-maroon-900/70' : 'text-stone-500'}`}>{i.label}</dt>
           <dd
-            className={`whitespace-nowrap text-sm font-semibold tabular-nums ${i.strong ? 'text-maroon-900' : 'text-ink'}`}
+            className={`whitespace-pre-line text-sm font-semibold tabular-nums ${i.strong ? 'text-maroon-900' : 'text-ink'}`}
           >
-            {i.value}
+            {i.value.replace(' + ', '\n')}
           </dd>
         </div>
       ))}
