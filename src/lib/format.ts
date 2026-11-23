@@ -46,7 +46,8 @@ export function unitName(unit: Unit | null | undefined): string {
 }
 
 /** A total over items counted in different units: "120 m", "40 pcs" or "120 m and 40 pcs". */
-export function qtyMix(m: number, p: number): string {
+export function qtyMix(m: number, p: number, emptyUnit: Unit = 'm'): string {
+  if (!p && !m) return qty(0, emptyUnit)
   if (!p) return qty(m, 'm')
   if (!m) return qty(p, 'pcs')
   return `${qty(m, 'm')} and ${qty(p, 'pcs')}`

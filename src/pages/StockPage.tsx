@@ -143,11 +143,12 @@ export function StockPage() {
     { value: 'production', label: 'Bought for production' },
   ]
 
+  const emptyUnit = rows.length > 0 && rows.every((r) => r.unit === 'pcs') ? 'pcs' : 'm'
   const summary = [
-    { label: 'Stock in', value: qtyMix(totals.bought, totals.boughtP) },
-    { label: 'Out for samples', value: qtyMix(totals.sample, totals.sampleP) },
-    { label: 'Out for kurtis', value: qtyMix(totals.actual, totals.actualP) },
-    { label: 'Wastage', value: qtyMix(totals.wastage, totals.wastageP) },
+    { label: 'Stock in', value: qtyMix(totals.bought, totals.boughtP, emptyUnit) },
+    { label: 'Out for samples', value: qtyMix(totals.sample, totals.sampleP, emptyUnit) },
+    { label: 'Out for kurtis', value: qtyMix(totals.actual, totals.actualP, emptyUnit) },
+    { label: 'Wastage', value: qtyMix(totals.wastage, totals.wastageP, emptyUnit) },
     { label: 'Stock value', value: rupees(totals.value) },
   ]
 
@@ -176,7 +177,7 @@ export function StockPage() {
           <p className="text-sm text-maroon-200/80 sm:hidden">Left on the shelf</p>
           <p className="hidden text-sm text-maroon-200/80 sm:block">Left on the shelf</p>
           <p className="font-display text-3xl font-bold tracking-tight tabular-nums sm:mt-1 sm:text-5xl">
-            {qtyMix(totals.left, totals.leftP)}
+            {qtyMix(totals.left, totals.leftP, emptyUnit)}
           </p>
           <p className="hidden text-sm text-maroon-200/80 sm:mt-1 sm:block">across {rows.length} {rows.length === 1 ? 'fabric' : 'fabrics'}</p>
         </div>

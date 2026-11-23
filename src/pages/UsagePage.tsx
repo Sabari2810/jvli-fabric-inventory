@@ -94,6 +94,8 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
   )
   const filteredLot = lotFilter ? lots.find((l) => l.id === lotFilter) : undefined
 
+  // An empty total shows the unit of what is being looked at (pieces when only pieces are listed).
+  const emptyUnit = rows.length > 0 && rows.every((u) => u.fabric_lots?.unit === 'pcs') ? 'pcs' : filteredLot?.unit === 'pcs' ? 'pcs' : 'm'
   const totals = useMemo(() => {
     // Meters and pieces are never added together.
     let used = 0
@@ -217,7 +219,7 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
             </>
           ) : null}
           <p className="text-sm text-stone-500 sm:ml-auto">
-            {qtyMix(totals.used, totals.usedP)} used, {qtyMix(totals.wastage, totals.wastageP)} wasted, {rupees(totals.cost)} of stock
+            {qtyMix(totals.used, totals.usedP, emptyUnit)} used, {qtyMix(totals.wastage, totals.wastageP, emptyUnit)} wasted, {rupees(totals.cost)} of stock
           </p>
         </div>
 
