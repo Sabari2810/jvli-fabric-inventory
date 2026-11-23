@@ -109,41 +109,6 @@ export function StockInDrawer({
             }))}
           />
         </Field>
-        <Field
-          label="Counted in"
-          hint={
-            unitChanged && hasStock
-              ? `This switches all of ${selected?.fabric_name ?? 'this item'} to ${pieces ? 'pieces' : 'meters'}. The ${plain(selected?.meters_bought ?? 0)} already recorded stays the same number.`
-              : pieces
-                ? 'Whole pieces, for ready-made items such as a dupatta.'
-                : 'Meters, for fabric.'
-          }
-        >
-          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Counted in">
-            {(
-              [
-                ['m', 'Meters'],
-                ['pcs', 'Pieces'],
-              ] as const
-            ).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                role="radio"
-                aria-checked={unit === value}
-                disabled={!lotId}
-                onClick={() => setUnit(value)}
-                className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                  unit === value
-                    ? 'border-maroon-900 bg-maroon-50 text-maroon-900'
-                    : 'border-stone-300 bg-white text-stone-600 hover:border-stone-400'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </Field>
         <div className="grid grid-cols-2 gap-4">
           <Field label="Bought for">
             <Combobox
@@ -158,18 +123,50 @@ export function StockInDrawer({
           <Field label="Date">
             <input type="date" required className={inputClass} value={date} onChange={(e) => setDate(e.target.value)} />
           </Field>
-          <Field label={pieces ? 'Pieces' : 'Meters'}>
-            <input
-              type="number"
-              inputMode="decimal"
-              step={pieces ? '1' : '0.01'}
-              min="0"
-              required
-              autoFocus
-              className={inputClass}
-              value={meterValue}
-              onChange={(e) => setMeterValue(e.target.value)}
-            />
+          <Field
+            className="col-span-2"
+            label={pieces ? 'Pieces' : 'Meters'}
+            hint={
+              unitChanged && hasStock
+                ? `This switches all of ${selected?.fabric_name ?? 'this item'} to ${pieces ? 'pieces' : 'meters'}. The ${plain(selected?.meters_bought ?? 0)} already recorded stays the same number.`
+                : undefined
+            }
+          >
+            <div className="flex gap-2">
+              <input
+                type="number"
+                inputMode={pieces ? 'numeric' : 'decimal'}
+                step={pieces ? '1' : '0.01'}
+                min="0"
+                required
+                autoFocus
+                className={`${inputClass} min-w-0 flex-1`}
+                value={meterValue}
+                onChange={(e) => setMeterValue(e.target.value)}
+              />
+              <div className="flex shrink-0 overflow-hidden rounded-lg border border-stone-300" role="radiogroup" aria-label="Counted in">
+                {(
+                  [
+                    ['m', 'Meters'],
+                    ['pcs', 'Pieces'],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={unit === value}
+                    disabled={!lotId}
+                    onClick={() => setUnit(value)}
+                    className={`px-3 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                      unit === value ? 'bg-maroon-900 text-white' : 'bg-white text-stone-600 hover:bg-stone-50'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </Field>
           <Field label={pieces ? 'Rate per piece (INR)' : 'Rate per meter (INR)'}>
             <input
