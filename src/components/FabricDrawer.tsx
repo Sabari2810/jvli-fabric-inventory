@@ -91,8 +91,9 @@ export function FabricDrawer({
 
   const saving = addFabric.isPending || updateFabric.isPending
   const pieces = unit === 'pcs'
-  // Once stock has been added or taken out, the unit is fixed.
-  const unitLocked = !!fabric && (Number(fabric.meters_bought) > 0 || Number(fabric.meters_left) !== Number(fabric.meters_bought))
+  // Stock that already exists keeps its numbers when the unit is switched; only the label changes.
+  const hasStock = !!fabric && Number(fabric.meters_bought) > 0
+  const unitChanged = !!fabric && unit !== fabric.unit
 
   return (
     <Drawer open={open} title={fabric ? (fabric.unit === 'pcs' ? 'Edit item' : 'Edit fabric') : 'Add fabric or item'} onClose={onClose}>
@@ -101,8 +102,8 @@ export function FabricDrawer({
         <Field
           label="Counted in"
           hint={
-            unitLocked
-              ? 'Fixed once stock has been added.'
+            hasStock && unitChanged
+              ? `The ${fabric ? Number(fabric.meters_bought) : 0} already recorded stays the same number, it will just be counted in ${pieces ? 'pieces' : 'meters'}.`
               : pieces
                 ? 'For ready-made items such as a dupatta. Stock is counted in whole pieces.'
                 : 'For fabric. Stock is counted in meters.'
@@ -120,13 +121,12 @@ export function FabricDrawer({
                 type="button"
                 role="radio"
                 aria-checked={unit === value}
-                disabled={unitLocked}
                 onClick={() => setUnit(value)}
-                className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed ${
+                className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition ${
                   unit === value
                     ? 'border-maroon-900 bg-maroon-50 text-maroon-900'
-                    : 'border-stone-300 bg-white text-stone-600 hover:border-stone-400 disabled:hover:border-stone-300'
-                } ${unitLocked && unit !== value ? 'opacity-50' : ''}`}
+                    : 'border-stone-300 bg-white text-stone-600 hover:border-stone-400'
+                }`}
               >
                 {label}
               </button>
