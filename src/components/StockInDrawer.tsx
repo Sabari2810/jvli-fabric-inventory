@@ -131,7 +131,7 @@ export function StockInDrawer({
                 type="button"
                 role="radio"
                 aria-checked={unit === value}
-                disabled={!!entry || !lotId}
+                disabled={!lotId}
                 onClick={() => setUnit(value)}
                 className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
                   unit === value
