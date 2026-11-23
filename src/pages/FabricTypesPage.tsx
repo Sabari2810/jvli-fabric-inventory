@@ -8,7 +8,7 @@ import {
   useRenameFabricType,
   useStock,
 } from '../lib/queries'
-import { meters } from '../lib/format'
+import { qtyMix } from '../lib/format'
 import type { FabricType } from '../lib/types'
 import {
   Card,
@@ -45,13 +45,18 @@ export function FabricTypesPage() {
   const [error, setError] = useState<string | null>(null)
 
   const totals = useMemo(() => {
-    const map = new Map<string, { fabrics: number; bought: number; left: number }>()
+    const map = new Map<string, { fabrics: number; bought: number; left: number; boughtP: number; leftP: number }>()
     for (const f of stock.data ?? []) {
       if (!f.fabric_type_id) continue
-      const t = map.get(f.fabric_type_id) ?? { fabrics: 0, bought: 0, left: 0 }
+      const t = map.get(f.fabric_type_id) ?? { fabrics: 0, bought: 0, left: 0, boughtP: 0, leftP: 0 }
       t.fabrics += 1
-      t.bought += Number(f.meters_bought)
-      t.left += Number(f.meters_left)
+      if (f.unit === 'pcs') {
+        t.boughtP += Number(f.meters_bought)
+        t.leftP += Number(f.meters_left)
+      } else {
+        t.bought += Number(f.meters_bought)
+        t.left += Number(f.meters_left)
+      }
       map.set(f.fabric_type_id, t)
     }
     return map
@@ -132,8 +137,8 @@ export function FabricTypesPage() {
                 <Stats
                   items={[
                     { label: 'Fabrics', value: x?.fabrics ?? 0 },
-                    { label: 'Stock in', value: meters(x?.bought ?? 0) },
-                    { label: 'Left', value: meters(x?.left ?? 0), strong: true },
+                    { label: 'Stock in', value: qtyMix(x?.bought ?? 0, x?.boughtP ?? 0) },
+                    { label: 'Left', value: qtyMix(x?.left ?? 0, x?.leftP ?? 0), strong: true },
                   ]}
                 />
               </MobileItem>
@@ -189,9 +194,9 @@ export function FabricTypesPage() {
                         </Link>
                       </Td>
                       <Td align="right">{x?.fabrics ?? 0}</Td>
-                      <Td align="right">{meters(x?.bought ?? 0)}</Td>
+                      <Td align="right">{qtyMix(x?.bought ?? 0, x?.boughtP ?? 0)}</Td>
                       <Td align="right" className="font-semibold">
-                        {meters(x?.left ?? 0)}
+                        {qtyMix(x?.left ?? 0, x?.leftP ?? 0)}
                       </Td>
                       <Td align="right" className="whitespace-nowrap">
                         <Link to="/fabric-types/$typeId" params={{ typeId: t.id }} className={`${linkButton} mr-2`}>

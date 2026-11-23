@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useDrops, useStock } from '../lib/queries'
-import { meters, rupees } from '../lib/format'
+import { qty, qtyMix, rupees } from '../lib/format'
 import { StylesTab } from '../components/StylesTab'
 import { Card, EmptyState, ErrorNote, Loading, MobileItem, MobileList, Stats, Td, Th, Thumb, linkButton } from '../components/ui'
 
@@ -13,14 +13,24 @@ export function DropDetailPage({ dropId }: { dropId: string }) {
   const fabrics = useMemo(() => (stock.data ?? []).filter((f) => f.drop_id === dropId), [stock.data, dropId])
 
   const t = useMemo(() => {
-    const x = { bought: 0, cost: 0, sample: 0, actual: 0, wastage: 0, left: 0, value: 0 }
+    // Meters and pieces are never added together: each has its own running total.
+    const x = { bought: 0, cost: 0, sample: 0, actual: 0, wastage: 0, left: 0, value: 0, boughtP: 0, sampleP: 0, actualP: 0, wastageP: 0, leftP: 0 }
     for (const f of fabrics) {
-      x.bought += Number(f.meters_bought)
+      const pcs = f.unit === 'pcs'
+      if (pcs) {
+        x.boughtP += Number(f.meters_bought)
+        x.sampleP += Number(f.meters_sample)
+        x.actualP += Number(f.meters_actual)
+        x.wastageP += Number(f.meters_wastage)
+        x.leftP += Number(f.meters_left)
+      } else {
+        x.bought += Number(f.meters_bought)
+        x.sample += Number(f.meters_sample)
+        x.actual += Number(f.meters_actual)
+        x.wastage += Number(f.meters_wastage)
+        x.left += Number(f.meters_left)
+      }
       x.cost += Number(f.total_cost)
-      x.sample += Number(f.meters_sample)
-      x.actual += Number(f.meters_actual)
-      x.wastage += Number(f.meters_wastage)
-      x.left += Number(f.meters_left)
       x.value += Number(f.meters_left) * Number(f.rate_per_meter)
     }
     return x
@@ -49,11 +59,11 @@ export function DropDetailPage({ dropId }: { dropId: string }) {
 
   const figures = [
     { label: 'Fabrics', value: String(fabrics.length) },
-    { label: 'Stock in', value: meters(t.bought) },
-    { label: 'Out for samples', value: meters(t.sample) },
-    { label: 'Out for kurtis', value: meters(t.actual) },
-    { label: 'Wastage', value: meters(t.wastage) },
-    { label: 'Left', value: meters(t.left) },
+    { label: 'Stock in', value: qtyMix(t.bought, t.boughtP) },
+    { label: 'Out for samples', value: qtyMix(t.sample, t.sampleP) },
+    { label: 'Out for kurtis', value: qtyMix(t.actual, t.actualP) },
+    { label: 'Wastage', value: qtyMix(t.wastage, t.wastageP) },
+    { label: 'Left', value: qtyMix(t.left, t.leftP) },
     { label: 'Total bought', value: rupees(t.cost) },
     { label: 'Stock value', value: rupees(t.value) },
   ]
@@ -90,7 +100,7 @@ export function DropDetailPage({ dropId }: { dropId: string }) {
         <div className="p-6 lg:p-8">
           <p className="text-sm text-maroon-200/80">Left on the shelf</p>
           <p className="mt-1 whitespace-nowrap font-display text-5xl font-bold tracking-tight tabular-nums">
-            {meters(t.left)}
+            {qtyMix(t.left, t.leftP)}
           </p>
           <p className="mt-1 text-sm text-maroon-200/80">
             across {fabrics.length} {fabrics.length === 1 ? 'fabric' : 'fabrics'}
@@ -131,11 +141,11 @@ export function DropDetailPage({ dropId }: { dropId: string }) {
               </div>
               <Stats
                 items={[
-                  { label: 'Stock in', value: meters(f.meters_bought) },
-                  { label: 'Samples', value: meters(f.meters_sample) },
-                  { label: 'Kurtis', value: meters(f.meters_actual) },
-                  { label: 'Wastage', value: meters(f.meters_wastage) },
-                  { label: 'Left', value: meters(f.meters_left), strong: true },
+                  { label: 'Stock in', value: qty(f.meters_bought, f.unit) },
+                  { label: 'Samples', value: qty(f.meters_sample, f.unit) },
+                  { label: 'Kurtis', value: qty(f.meters_actual, f.unit) },
+                  { label: 'Wastage', value: qty(f.meters_wastage, f.unit) },
+                  { label: 'Left', value: qty(f.meters_left, f.unit), strong: true },
                   { label: 'Stock value', value: rupees(Number(f.meters_left) * Number(f.rate_per_meter)) },
                 ]}
               />
@@ -186,12 +196,12 @@ export function DropDetailPage({ dropId }: { dropId: string }) {
                       </Link>
                       <p className="text-xs text-stone-500">{f.color || 'No color'}</p>
                     </Td>
-                    <Td align="right">{meters(f.meters_bought)}</Td>
-                    <Td align="right">{meters(f.meters_sample)}</Td>
-                    <Td align="right">{meters(f.meters_actual)}</Td>
-                    <Td align="right">{meters(f.meters_wastage)}</Td>
+                    <Td align="right">{qty(f.meters_bought, f.unit)}</Td>
+                    <Td align="right">{qty(f.meters_sample, f.unit)}</Td>
+                    <Td align="right">{qty(f.meters_actual, f.unit)}</Td>
+                    <Td align="right">{qty(f.meters_wastage, f.unit)}</Td>
                     <Td align="right" className="font-semibold">
-                      {meters(f.meters_left)}
+                      {qty(f.meters_left, f.unit)}
                     </Td>
                     <Td align="right">{rupees(Number(f.meters_left) * Number(f.rate_per_meter))}</Td>
                   </tr>

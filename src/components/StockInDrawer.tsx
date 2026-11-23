@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useAddStockIn, useAddSupplier, useStock, useSuppliers, useUpdateStockIn } from '../lib/queries'
-import { plain, todayISO } from '../lib/format'
+import { qty, todayISO } from '../lib/format'
 import type { Purpose, StockIn } from '../lib/types'
 import { Combobox } from './Combobox'
 import { Drawer, ErrorNote, Field, inputClass, primaryButton, subtleButton } from './ui'
@@ -52,8 +52,10 @@ export function StockInDrawer({
     e.preventDefault()
     setError(null)
     const m = Number(meterValue)
+    const pieces = fabrics.find((f) => f.id === lotId)?.unit === 'pcs'
     if (!lotId) return setError('Pick the fabric.')
-    if (!Number.isFinite(m) || m <= 0) return setError('Meters must be more than 0.')
+    if (!Number.isFinite(m) || m <= 0) return setError(pieces ? 'Pieces must be more than 0.' : 'Meters must be more than 0.')
+    if (pieces && !Number.isInteger(m)) return setError('Pieces must be a whole number.')
     const payload = {
       lot_id: lotId,
       entry_date: date,
@@ -74,23 +76,24 @@ export function StockInDrawer({
 
   const saving = addEntry.isPending || updateEntry.isPending
   const selected = fabrics.find((f) => f.id === lotId)
+  const pieces = selected?.unit === 'pcs'
 
   return (
     <Drawer open={open} title={entry ? 'Edit stock in' : 'Stock in'} onClose={onClose}>
       <form onSubmit={onSubmit} className="space-y-5">
         <Field
-          label="Fabric"
-          hint={selected ? `${plain(selected.meters_left)} m on the shelf now` : 'Add the fabric on the Stock page first.'}
+          label="Fabric or item"
+          hint={selected ? `${qty(selected.meters_left, selected.unit)} on the shelf now` : 'Add the fabric on the Stock page first.'}
         >
           <Combobox
             value={lotId}
             onChange={setLotId}
             disabled={!!entry}
-            placeholder="Select a fabric"
+            placeholder="Select a fabric or item"
             options={fabrics.map((f) => ({
               value: f.id,
               label: `${f.fabric_name}${f.color ? `, ${f.color}` : ''}`,
-              hint: `${plain(f.meters_left)} m left`,
+              hint: `${qty(f.meters_left, f.unit)} left`,
             }))}
           />
         </Field>
@@ -108,11 +111,11 @@ export function StockInDrawer({
           <Field label="Date">
             <input type="date" required className={inputClass} value={date} onChange={(e) => setDate(e.target.value)} />
           </Field>
-          <Field label="Meters">
+          <Field label={pieces ? 'Pieces' : 'Meters'}>
             <input
               type="number"
               inputMode="decimal"
-              step="0.01"
+              step={pieces ? '1' : '0.01'}
               min="0"
               required
               autoFocus
@@ -121,7 +124,7 @@ export function StockInDrawer({
               onChange={(e) => setMeterValue(e.target.value)}
             />
           </Field>
-          <Field label="Rate per meter (INR)">
+          <Field label={pieces ? 'Rate per piece (INR)' : 'Rate per meter (INR)'}>
             <input
               type="number"
               inputMode="decimal"

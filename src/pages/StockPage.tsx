@@ -6,7 +6,7 @@ import { Combobox } from '../components/Combobox'
 import { FabricDrawer } from '../components/FabricDrawer'
 import { StockInDrawer } from '../components/StockInDrawer'
 import type { FabricStock } from '../lib/types'
-import { meters, plain, rupees } from '../lib/format'
+import { qty, qtyMix, rupees } from '../lib/format'
 import {
   Badge,
   Card,
@@ -68,13 +68,23 @@ export function StockPage() {
   )
 
   const totals = useMemo(() => {
-    const t = { bought: 0, sample: 0, actual: 0, wastage: 0, left: 0, value: 0 }
+    // Meters and pieces are never added together: each has its own running total.
+    const t = { bought: 0, sample: 0, actual: 0, wastage: 0, left: 0, value: 0, boughtP: 0, sampleP: 0, actualP: 0, wastageP: 0, leftP: 0 }
     for (const r of rows) {
-      t.bought += Number(r.meters_bought)
-      t.sample += Number(r.meters_sample)
-      t.actual += Number(r.meters_actual)
-      t.wastage += Number(r.meters_wastage)
-      t.left += Number(r.meters_left)
+      const pcs = r.unit === 'pcs'
+      if (pcs) {
+        t.boughtP += Number(r.meters_bought)
+        t.sampleP += Number(r.meters_sample)
+        t.actualP += Number(r.meters_actual)
+        t.wastageP += Number(r.meters_wastage)
+        t.leftP += Number(r.meters_left)
+      } else {
+        t.bought += Number(r.meters_bought)
+        t.sample += Number(r.meters_sample)
+        t.actual += Number(r.meters_actual)
+        t.wastage += Number(r.meters_wastage)
+        t.left += Number(r.meters_left)
+      }
       t.value += Number(r.meters_left) * Number(r.rate_per_meter)
     }
     return t
@@ -134,10 +144,10 @@ export function StockPage() {
   ]
 
   const summary = [
-    { label: 'Stock in', value: meters(totals.bought) },
-    { label: 'Out for samples', value: meters(totals.sample) },
-    { label: 'Out for kurtis', value: meters(totals.actual) },
-    { label: 'Wastage', value: meters(totals.wastage) },
+    { label: 'Stock in', value: qtyMix(totals.bought, totals.boughtP) },
+    { label: 'Out for samples', value: qtyMix(totals.sample, totals.sampleP) },
+    { label: 'Out for kurtis', value: qtyMix(totals.actual, totals.actualP) },
+    { label: 'Wastage', value: qtyMix(totals.wastage, totals.wastageP) },
     { label: 'Stock value', value: rupees(totals.value) },
   ]
 
@@ -166,7 +176,7 @@ export function StockPage() {
           <p className="text-sm text-maroon-200/80 sm:hidden">Left on the shelf</p>
           <p className="hidden text-sm text-maroon-200/80 sm:block">Left on the shelf</p>
           <p className="font-display text-3xl font-bold tracking-tight tabular-nums sm:mt-1 sm:text-5xl">
-            {meters(totals.left)}
+            {qtyMix(totals.left, totals.leftP)}
           </p>
           <p className="hidden text-sm text-maroon-200/80 sm:mt-1 sm:block">across {rows.length} {rows.length === 1 ? 'fabric' : 'fabrics'}</p>
         </div>
@@ -365,15 +375,15 @@ export function StockPage() {
                 <dl className="mt-4 grid grid-cols-3 gap-px overflow-hidden rounded-xl bg-stone-200/80 text-center">
                   <div className="bg-stone-50 py-2.5">
                     <dt className="text-xs text-stone-500">Stock in</dt>
-                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums">{plain(r.meters_bought)} m</dd>
+                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums">{qty(r.meters_bought, r.unit)}</dd>
                   </div>
                   <div className="bg-stone-50 py-2.5">
                     <dt className="text-xs text-stone-500">Wastage</dt>
-                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums">{plain(r.meters_wastage)} m</dd>
+                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums">{qty(r.meters_wastage, r.unit)}</dd>
                   </div>
                   <div className="bg-maroon-50 py-2.5">
                     <dt className="text-xs text-maroon-900/70">Left</dt>
-                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums text-maroon-900">{plain(left)} m</dd>
+                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums text-maroon-900">{qty(left, r.unit)}</dd>
                   </div>
                 </dl>
                 {canEdit ? (
@@ -432,10 +442,10 @@ export function StockPage() {
                         </p>
                       </Td>
                       <Td>{drop ? <Badge tone="maroon">{drop}</Badge> : <span className="text-stone-400">-</span>}</Td>
-                      <Td align="right">{plain(r.meters_bought)} m</Td>
-                      <Td align="right">{plain(r.meters_wastage)} m</Td>
+                      <Td align="right">{qty(r.meters_bought, r.unit)}</Td>
+                      <Td align="right">{qty(r.meters_wastage, r.unit)}</Td>
                       <Td align="right" className="font-semibold">
-                        {plain(left)} m
+                        {qty(left, r.unit)}
                       </Td>
                       <Td align="right" className="whitespace-nowrap">
                         {canEdit ? (

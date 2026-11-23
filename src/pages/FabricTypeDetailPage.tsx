@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useFabricTypes, useStock } from '../lib/queries'
-import { meters, rupees } from '../lib/format'
+import { qty, qtyMix, rupees } from '../lib/format'
 import { Card, EmptyState, ErrorNote, Loading, MobileItem, MobileList, Stats, Td, Th, Thumb, linkButton } from '../components/ui'
 
 export function FabricTypeDetailPage({ typeId }: { typeId: string }) {
@@ -28,14 +28,14 @@ export function FabricTypeDetailPage({ typeId }: { typeId: string }) {
   }
 
   const fabrics = (stock.data ?? []).filter((f) => f.fabric_type_id === typeId)
-  const bought = fabrics.reduce((a, f) => a + Number(f.meters_bought), 0)
-  const left = fabrics.reduce((a, f) => a + Number(f.meters_left), 0)
+  const sumOf = (unit: 'm' | 'pcs', key: 'meters_bought' | 'meters_left') =>
+    fabrics.filter((f) => (f.unit === 'pcs') === (unit === 'pcs')).reduce((a, f) => a + Number(f[key]), 0)
   const value = fabrics.reduce((a, f) => a + Number(f.meters_left) * Number(f.rate_per_meter), 0)
 
   const figures = [
     { label: 'Fabrics', value: String(fabrics.length) },
-    { label: 'Stock in', value: meters(bought) },
-    { label: 'Left', value: meters(left) },
+    { label: 'Stock in', value: qtyMix(sumOf('m', 'meters_bought'), sumOf('pcs', 'meters_bought')) },
+    { label: 'Left', value: qtyMix(sumOf('m', 'meters_left'), sumOf('pcs', 'meters_left')) },
     { label: 'Stock value', value: rupees(value) },
   ]
 
@@ -77,8 +77,8 @@ export function FabricTypeDetailPage({ typeId }: { typeId: string }) {
               </div>
               <Stats
                 items={[
-                  { label: 'Stock in', value: meters(f.meters_bought) },
-                  { label: 'Left', value: meters(f.meters_left), strong: true },
+                  { label: 'Stock in', value: qty(f.meters_bought, f.unit) },
+                  { label: 'Left', value: qty(f.meters_left, f.unit), strong: true },
                   { label: 'Avg rate', value: rupees(f.rate_per_meter) },
                 ]}
               />
@@ -120,9 +120,9 @@ export function FabricTypeDetailPage({ typeId }: { typeId: string }) {
                       <p className="text-xs text-stone-500">{f.color || 'No color'}</p>
                     </Td>
                     <Td align="right">{f.width_inches ? `${f.width_inches} in` : '-'}</Td>
-                    <Td align="right">{meters(f.meters_bought)}</Td>
+                    <Td align="right">{qty(f.meters_bought, f.unit)}</Td>
                     <Td align="right" className="font-semibold">
-                      {meters(f.meters_left)}
+                      {qty(f.meters_left, f.unit)}
                     </Td>
                     <Td align="right">{rupees(f.rate_per_meter)}</Td>
                   </tr>

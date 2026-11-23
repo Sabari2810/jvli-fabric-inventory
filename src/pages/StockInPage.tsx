@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useCanEdit, useDeleteStockIn, useStockIn } from '../lib/queries'
-import { meters, rupees, shortDate } from '../lib/format'
+import { qty, rupees, shortDate } from '../lib/format'
 import type { StockIn } from '../lib/types'
 import { StockInDrawer } from '../components/StockInDrawer'
 import {
@@ -38,7 +38,7 @@ export function StockInPage() {
   }
 
   function onDelete(e: StockIn) {
-    if (!window.confirm(`Delete this stock in entry of ${meters(e.meters)}? This cannot be undone.`)) return
+    if (!window.confirm(`Delete this stock in entry of ${qty(e.meters, e.fabric_lots?.unit)}? This cannot be undone.`)) return
     deleteEntry.mutate(e.id)
   }
 
@@ -48,7 +48,7 @@ export function StockInPage() {
     <>
       <PageHeader
         title="Stock in"
-        subtitle="Every time you buy meters of a fabric. Buy the same fabric again and it adds to the same record."
+        subtitle="Every time you buy a fabric (in meters) or an item like a dupatta (in pieces). Buy the same fabric again and it adds to the same record."
         action={
           canEdit ? (
             <button type="button" className={primaryButton} onClick={startAdd}>
@@ -90,7 +90,7 @@ export function StockInPage() {
               </div>
               <Stats
                 items={[
-                  { label: 'Meters', value: meters(e.meters) },
+                  { label: 'Quantity', value: qty(e.meters, e.fabric_lots?.unit) },
                   { label: 'Rate', value: rupees(e.rate_per_meter) },
                   { label: 'Total', value: rupees(Number(e.meters) * Number(e.rate_per_meter)), strong: true },
                 ]}
@@ -129,7 +129,7 @@ export function StockInPage() {
                   <Th>Fabric</Th>
                   <Th>Supplier</Th>
                   <Th>Bought for</Th>
-                  <Th align="right">Meters</Th>
+                  <Th align="right">Quantity</Th>
                   <Th align="right">Rate</Th>
                   <Th align="right">Total</Th>
                   <Th />
@@ -149,7 +149,7 @@ export function StockInPage() {
                         {e.purpose === 'sample' ? 'Sample' : 'Production'}
                       </Badge>
                     </Td>
-                    <Td align="right">{meters(e.meters)}</Td>
+                    <Td align="right">{qty(e.meters, e.fabric_lots?.unit)}</Td>
                     <Td align="right">{rupees(e.rate_per_meter)}</Td>
                     <Td align="right" className="font-semibold">
                       {rupees(Number(e.meters) * Number(e.rate_per_meter))}

@@ -7,7 +7,7 @@ import {
   useStockIn,
   useSuppliers,
 } from '../lib/queries'
-import { meters, rupees, shortDate } from '../lib/format'
+import { qtyMix, rupees, shortDate } from '../lib/format'
 import type { Supplier } from '../lib/types'
 import {
   Card,
@@ -53,13 +53,14 @@ export function SuppliersPage() {
   const [error, setError] = useState<string | null>(null)
 
   const totals = useMemo(() => {
-    const map = new Map<string, { entries: number; meters: number; spent: number; last: string }>()
+    const map = new Map<string, { entries: number; meters: number; pieces: number; spent: number; last: string }>()
     for (const e of stockIn.data ?? []) {
       const key = (e.supplier ?? '').trim().toLowerCase()
       if (!key) continue
-      const t = map.get(key) ?? { entries: 0, meters: 0, spent: 0, last: '' }
+      const t = map.get(key) ?? { entries: 0, meters: 0, pieces: 0, spent: 0, last: '' }
       t.entries += 1
-      t.meters += Number(e.meters)
+      if (e.fabric_lots?.unit === 'pcs') t.pieces += Number(e.meters)
+      else t.meters += Number(e.meters)
       t.spent += Number(e.meters) * Number(e.rate_per_meter)
       if (e.entry_date > t.last) t.last = e.entry_date
       map.set(key, t)
@@ -161,7 +162,7 @@ export function SuppliersPage() {
                 </div>
                 <Stats
                   items={[
-                    { label: 'Meters bought', value: meters(t?.meters ?? 0) },
+                    { label: 'Bought', value: qtyMix(t?.meters ?? 0, t?.pieces ?? 0) },
                     { label: 'Last bought', value: t?.last ? shortDate(t.last) : '-' },
                   ]}
                 />
@@ -207,7 +208,7 @@ export function SuppliersPage() {
                   <Th>Location</Th>
                   <Th>Website</Th>
                   <Th align="right">Entries</Th>
-                  <Th align="right">Meters bought</Th>
+                  <Th align="right">Bought</Th>
                   <Th align="right">Spent</Th>
                   <Th>Last bought</Th>
                   <Th />
@@ -244,7 +245,7 @@ export function SuppliersPage() {
                         )}
                       </Td>
                       <Td align="right">{t?.entries ?? 0}</Td>
-                      <Td align="right">{meters(t?.meters ?? 0)}</Td>
+                      <Td align="right">{qtyMix(t?.meters ?? 0, t?.pieces ?? 0)}</Td>
                       <Td align="right" className="font-semibold">
                         {rupees(t?.spent ?? 0)}
                       </Td>

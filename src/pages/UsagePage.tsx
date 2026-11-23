@@ -8,7 +8,7 @@ import {
   useUpdateUsage,
   useUsage,
 } from '../lib/queries'
-import { meters, plain, rupees, shortDate, todayISO } from '../lib/format'
+import { qty, qtyMix, rupees, shortDate, todayISO } from '../lib/format'
 import type { FabricUsage, UsageType } from '../lib/types'
 import { Combobox } from '../components/Combobox'
 import {
@@ -74,6 +74,7 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
     editing && editing.lot_id === form.lot_id
       ? Number(editing.meters_used) + Number(editing.wastage_meters)
       : 0
+  const pieces = selectedLot?.unit === 'pcs'
   const available = selectedLot ? Number(selectedLot.meters_left) + addBack : null
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
@@ -94,15 +95,23 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
   const filteredLot = lotFilter ? lots.find((l) => l.id === lotFilter) : undefined
 
   const totals = useMemo(() => {
+    // Meters and pieces are never added together.
     let used = 0
     let wastage = 0
+    let usedP = 0
+    let wastageP = 0
     let cost = 0
     for (const u of rows) {
-      used += Number(u.meters_used)
-      wastage += Number(u.wastage_meters)
+      if (u.fabric_lots?.unit === 'pcs') {
+        usedP += Number(u.meters_used)
+        wastageP += Number(u.wastage_meters)
+      } else {
+        used += Number(u.meters_used)
+        wastage += Number(u.wastage_meters)
+      }
       cost += Number(u.meters_used) * (rateByFabric.get(u.lot_id) ?? 0)
     }
-    return { used, wastage, cost }
+    return { used, wastage, usedP, wastageP, cost }
   }, [rows])
 
   function startAdd() {
@@ -134,11 +143,12 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
     const used = Number(form.meters_used)
     const wastage = Number(form.wastage_meters) || 0
 
-    if (!form.lot_id) return setFormError('Pick the fabric you cut from.')
-    if (!Number.isFinite(used) || used <= 0) return setFormError('Meters used must be more than 0.')
+    if (!form.lot_id) return setFormError('Pick the fabric or item you are taking out.')
+    if (!Number.isFinite(used) || used <= 0) return setFormError(pieces ? 'Pieces used must be more than 0.' : 'Meters used must be more than 0.')
+    if (pieces && (!Number.isInteger(used) || !Number.isInteger(wastage))) return setFormError('Pieces must be whole numbers.')
     if (wastage < 0) return setFormError('Wastage cannot be negative.')
     if (available !== null && used + wastage > available) {
-      return setFormError(`Only ${plain(available)} m is left of this fabric.`)
+      return setFormError(`Only ${qty(available, selectedLot?.unit)} is left of this item.`)
     }
 
     try {
@@ -207,7 +217,7 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
             </>
           ) : null}
           <p className="text-sm text-stone-500 sm:ml-auto">
-            {meters(totals.used)} used, {meters(totals.wastage)} wasted, {rupees(totals.cost)} of fabric
+            {qtyMix(totals.used, totals.usedP)} used, {qtyMix(totals.wastage, totals.wastageP)} wasted, {rupees(totals.cost)} of stock
           </p>
         </div>
 
@@ -270,8 +280,8 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
                 </div>
                 <Stats
                   items={[
-                    { label: 'Used', value: meters(u.meters_used) },
-                    { label: 'Wastage', value: meters(u.wastage_meters) },
+                    { label: 'Used', value: qty(u.meters_used, u.fabric_lots?.unit) },
+                    { label: 'Wastage', value: qty(u.wastage_meters, u.fabric_lots?.unit) },
                     { label: 'Cost', value: rupees(Number(u.meters_used) * (rateByFabric.get(u.lot_id) ?? 0)), strong: true },
                   ]}
                 />
@@ -308,8 +318,8 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
                         {u.usage_type === 'sample' ? 'Sample' : 'Kurti'}
                       </Badge>
                     </Td>
-                    <Td align="right">{meters(u.meters_used)}</Td>
-                    <Td align="right">{meters(u.wastage_meters)}</Td>
+                    <Td align="right">{qty(u.meters_used, u.fabric_lots?.unit)}</Td>
+                    <Td align="right">{qty(u.wastage_meters, u.fabric_lots?.unit)}</Td>
                     <Td align="right" className="font-semibold">
                       {rupees(Number(u.meters_used) * (rateByFabric.get(u.lot_id) ?? 0))}
                     </Td>
@@ -332,17 +342,17 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
       <Drawer open={open && canEdit} title={editing ? 'Edit stock out' : 'Stock out'} onClose={() => setOpen(false)}>
         <form onSubmit={onSubmit} className="space-y-5">
           <Field
-            label="Fabric"
-            hint={available !== null ? `${plain(available)} m available` : undefined}
+            label="Fabric or item"
+            hint={available !== null ? `${qty(available, selectedLot?.unit)} available` : undefined}
           >
             <Combobox
               value={form.lot_id}
               onChange={(v) => set('lot_id', v)}
-              placeholder="Select a fabric"
+              placeholder="Select a fabric or item"
               options={lots.map((l) => ({
                 value: l.id,
                 label: `${l.fabric_name}${l.color ? `, ${l.color}` : ''}`,
-                hint: `${plain(l.meters_left)} m left`,
+                hint: `${qty(l.meters_left, l.unit)} left`,
               }))}
             />
           </Field>
@@ -367,11 +377,11 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
                 onChange={(e) => set('usage_date', e.target.value)}
               />
             </Field>
-            <Field label="Meters used">
+            <Field label={pieces ? 'Pieces used' : 'Meters used'}>
               <input
                 type="number"
-                inputMode="decimal"
-                step="0.01"
+                inputMode={pieces ? 'numeric' : 'decimal'}
+                step={pieces ? '1' : '0.01'}
                 min="0"
                 required
                 className={inputClass}
@@ -379,11 +389,11 @@ export function UsagePage({ lotFilter }: { lotFilter?: string }) {
                 onChange={(e) => set('meters_used', e.target.value)}
               />
             </Field>
-            <Field label="Wastage (m)">
+            <Field label={pieces ? 'Wastage (pcs)' : 'Wastage (m)'}>
               <input
                 type="number"
-                inputMode="decimal"
-                step="0.01"
+                inputMode={pieces ? 'numeric' : 'decimal'}
+                step={pieces ? '1' : '0.01'}
                 min="0"
                 className={inputClass}
                 value={form.wastage_meters}

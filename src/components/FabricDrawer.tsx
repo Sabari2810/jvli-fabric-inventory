@@ -7,7 +7,7 @@ import {
   useFabricTypes,
   useUpdateFabric,
 } from '../lib/queries'
-import type { FabricStock } from '../lib/types'
+import type { FabricStock, Unit } from '../lib/types'
 import { Drawer, ErrorNote, Field, inputClass, primaryButton, subtleButton } from './ui'
 import { Combobox } from './Combobox'
 import { PhotoField } from './PhotoField'
@@ -35,6 +35,7 @@ export function FabricDrawer({
   const [dropId, setDropId] = useState('')
   const [typeId, setTypeId] = useState('')
   const [width, setWidth] = useState('')
+  const [unit, setUnit] = useState<Unit>('m')
   const [image, setImage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -47,6 +48,7 @@ export function FabricDrawer({
     setDropId(fabric?.drop_id ?? '')
     setTypeId(fabric?.fabric_type_id ?? '')
     setWidth(fabric?.width_inches != null ? String(fabric.width_inches) : '')
+    setUnit(fabric?.unit ?? 'm')
     setImage(fabric?.image_data ?? null)
     setError(null)
   }, [open, fabric])
@@ -66,7 +68,7 @@ export function FabricDrawer({
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
-    if (!name.trim()) return setError('Enter the fabric name.')
+    if (!name.trim()) return setError(unit === 'pcs' ? 'Enter the item name.' : 'Enter the fabric name.')
     if (width.trim() && !(Number(width) > 0)) return setError('Width must be a number of inches.')
     const payload = {
       fabric_name: name.trim(),
@@ -75,7 +77,8 @@ export function FabricDrawer({
       image_data: image,
       drop_id: dropId || null,
       fabric_type_id: typeId || null,
-      width_inches: width.trim() ? Number(width) : null,
+      width_inches: unit === 'm' && width.trim() ? Number(width) : null,
+      unit,
     }
     try {
       if (fabric) await updateFabric.mutateAsync({ id: fabric.id, patch: payload })
@@ -87,23 +90,61 @@ export function FabricDrawer({
   }
 
   const saving = addFabric.isPending || updateFabric.isPending
+  const pieces = unit === 'pcs'
+  // Once stock has been added or taken out, the unit is fixed.
+  const unitLocked = !!fabric && (Number(fabric.meters_bought) > 0 || Number(fabric.meters_left) !== Number(fabric.meters_bought))
 
   return (
-    <Drawer open={open} title={fabric ? 'Edit fabric' : 'Add fabric'} onClose={onClose}>
+    <Drawer open={open} title={fabric ? (fabric.unit === 'pcs' ? 'Edit item' : 'Edit fabric') : 'Add fabric or item'} onClose={onClose}>
       <form onSubmit={onSubmit} className="space-y-5">
         <PhotoField value={image} onChange={setImage} onError={setError} active={open} onBusy={setBusy} />
-        <Field label="Fabric name">
+        <Field
+          label="Counted in"
+          hint={
+            unitLocked
+              ? 'Fixed once stock has been added.'
+              : pieces
+                ? 'For ready-made items such as a dupatta. Stock is counted in whole pieces.'
+                : 'For fabric. Stock is counted in meters.'
+          }
+        >
+          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Counted in">
+            {(
+              [
+                ['m', 'Meters'],
+                ['pcs', 'Pieces'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={unit === value}
+                disabled={unitLocked}
+                onClick={() => setUnit(value)}
+                className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed ${
+                  unit === value
+                    ? 'border-maroon-900 bg-maroon-50 text-maroon-900'
+                    : 'border-stone-300 bg-white text-stone-600 hover:border-stone-400 disabled:hover:border-stone-300'
+                } ${unitLocked && unit !== value ? 'opacity-50' : ''}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </Field>
+        <Field label={pieces ? 'Item name' : 'Fabric name'}>
           <input
             required
             autoFocus
-            placeholder="Cotton, rayon, chanderi"
+            placeholder={pieces ? 'Mulmul dupatta' : 'Cotton, rayon, chanderi'}
             className={inputClass}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
         </Field>
-        <div className="grid grid-cols-[1fr_8rem] gap-4">
-          <Field label="Fabric type">
+        <div className={pieces ? '' : 'grid grid-cols-[1fr_8rem] gap-4'}>
+          <Field label={pieces ? 'Type' : 'Fabric type'}>
             <Combobox
               value={typeId}
               onChange={setTypeId}
@@ -123,6 +164,7 @@ export function FabricDrawer({
               ]}
             />
           </Field>
+          {pieces ? null : (
           <Field label="Width (inches)">
             <input
               type="number"
@@ -135,6 +177,7 @@ export function FabricDrawer({
               onChange={(e) => setWidth(e.target.value)}
             />
           </Field>
+          )}
         </div>
         <Field label="Color">
           <input placeholder="Indigo" className={inputClass} value={color} onChange={(e) => setColor(e.target.value)} />
@@ -166,7 +209,7 @@ export function FabricDrawer({
         <ErrorNote message={error} />
         <div className="sticky bottom-0 z-10 -mx-5 flex gap-3 border-t border-stone-100 bg-white px-5 pb-5 pt-4 md:static md:mx-0 md:px-0 md:pb-0 md:pt-5">
           <button type="submit" disabled={saving || busy} className={primaryButton}>
-            {saving ? 'Saving' : fabric ? 'Save changes' : 'Add fabric'}
+            {saving ? 'Saving' : fabric ? 'Save changes' : pieces ? 'Add item' : 'Add fabric'}
           </button>
           <button type="button" className={subtleButton} onClick={onClose}>
             Cancel

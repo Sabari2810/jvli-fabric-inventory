@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useAddDrop, useCanEdit, useDeleteDrop, useDrops, useRenameDrop, useStock } from '../lib/queries'
-import { meters, rupees } from '../lib/format'
+import { qtyMix, rupees } from '../lib/format'
 import {
   Card,
   Drawer,
@@ -35,14 +35,21 @@ export function DropsPage() {
   const [error, setError] = useState<string | null>(null)
 
   const totals = useMemo(() => {
-    const map = new Map<string, { fabrics: number; bought: number; out: number; left: number; value: number }>()
+    const map = new Map<string, { fabrics: number; bought: number; out: number; left: number; value: number; boughtP: number; outP: number; leftP: number }>()
     for (const f of stock.data ?? []) {
       if (!f.drop_id) continue
-      const t = map.get(f.drop_id) ?? { fabrics: 0, bought: 0, out: 0, left: 0, value: 0 }
+      const t = map.get(f.drop_id) ?? { fabrics: 0, bought: 0, out: 0, left: 0, value: 0, boughtP: 0, outP: 0, leftP: 0 }
       t.fabrics += 1
-      t.bought += Number(f.meters_bought)
-      t.out += Number(f.meters_sample) + Number(f.meters_actual) + Number(f.meters_wastage)
-      t.left += Number(f.meters_left)
+      const out = Number(f.meters_sample) + Number(f.meters_actual) + Number(f.meters_wastage)
+      if (f.unit === 'pcs') {
+        t.boughtP += Number(f.meters_bought)
+        t.outP += out
+        t.leftP += Number(f.meters_left)
+      } else {
+        t.bought += Number(f.meters_bought)
+        t.out += out
+        t.left += Number(f.meters_left)
+      }
       t.value += Number(f.meters_left) * Number(f.rate_per_meter)
       map.set(f.drop_id, t)
     }
@@ -110,7 +117,7 @@ export function DropsPage() {
       {rows.length > 0 ? (
         <ul className="space-y-3 md:hidden">
           {rows.map((d) => {
-            const t = totals.get(d.id) ?? { fabrics: 0, bought: 0, out: 0, left: 0, value: 0 }
+            const t = totals.get(d.id) ?? { fabrics: 0, bought: 0, out: 0, left: 0, value: 0, boughtP: 0, outP: 0, leftP: 0 }
             return (
               <li key={d.id} className="relative rounded-2xl border border-stone-200/80 bg-white p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -136,15 +143,15 @@ export function DropsPage() {
                 <dl className="mt-4 grid grid-cols-3 gap-px overflow-hidden rounded-xl bg-stone-200/80 text-center">
                   <div className="bg-stone-50 py-2.5">
                     <dt className="text-xs text-stone-500">Stock in</dt>
-                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums">{meters(t.bought)}</dd>
+                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums">{qtyMix(t.bought, t.boughtP)}</dd>
                   </div>
                   <div className="bg-stone-50 py-2.5">
                     <dt className="text-xs text-stone-500">Stock out</dt>
-                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums">{meters(t.out)}</dd>
+                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums">{qtyMix(t.out, t.outP)}</dd>
                   </div>
                   <div className="bg-maroon-50 py-2.5">
                     <dt className="text-xs text-maroon-900/70">Left</dt>
-                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums text-maroon-900">{meters(t.left)}</dd>
+                    <dd className="whitespace-nowrap text-sm font-semibold tabular-nums text-maroon-900">{qtyMix(t.left, t.leftP)}</dd>
                   </div>
                 </dl>
                 {canEdit ? (
@@ -195,7 +202,7 @@ export function DropsPage() {
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {rows.map((d) => {
-                  const t = totals.get(d.id) ?? { fabrics: 0, bought: 0, out: 0, left: 0, value: 0 }
+                  const t = totals.get(d.id) ?? { fabrics: 0, bought: 0, out: 0, left: 0, value: 0, boughtP: 0, outP: 0, leftP: 0 }
                   return (
                     <tr key={d.id} className="transition hover:bg-stone-50/70">
                       <Td>
@@ -208,10 +215,10 @@ export function DropsPage() {
                         </Link>
                       </Td>
                       <Td align="right">{t.fabrics}</Td>
-                      <Td align="right">{meters(t.bought)}</Td>
-                      <Td align="right">{meters(t.out)}</Td>
+                      <Td align="right">{qtyMix(t.bought, t.boughtP)}</Td>
+                      <Td align="right">{qtyMix(t.out, t.outP)}</Td>
                       <Td align="right" className="font-semibold">
-                        {meters(t.left)}
+                        {qtyMix(t.left, t.leftP)}
                       </Td>
                       <Td align="right">{rupees(t.value)}</Td>
                       <Td align="right" className="whitespace-nowrap">

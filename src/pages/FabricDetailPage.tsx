@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useCanEdit, useDrops, useFabricTypes, useStock, useStockIn, useUsage } from '../lib/queries'
-import { meters, plain, rupees, shortDate } from '../lib/format'
+import { qty, rupees, shortDate } from '../lib/format'
 import {
   Badge,
   Card,
@@ -51,10 +51,10 @@ export function FabricDetailPage({ fabricId }: { fabricId: string }) {
   const left = Number(fabric.meters_left)
 
   const figures = [
-    { label: 'Stock in', value: meters(fabric.meters_bought) },
-    { label: 'Out for samples', value: meters(fabric.meters_sample) },
-    { label: 'Out for kurtis', value: meters(fabric.meters_actual) },
-    { label: 'Wastage', value: meters(fabric.meters_wastage) },
+    { label: 'Stock in', value: qty(fabric.meters_bought, fabric.unit) },
+    { label: 'Out for samples', value: qty(fabric.meters_sample, fabric.unit) },
+    { label: 'Out for kurtis', value: qty(fabric.meters_actual, fabric.unit) },
+    { label: 'Wastage', value: qty(fabric.meters_wastage, fabric.unit) },
     { label: 'Average rate', value: rupees(fabric.rate_per_meter) },
     { label: 'Stock value', value: rupees(left * Number(fabric.rate_per_meter)) },
   ]
@@ -88,10 +88,10 @@ export function FabricDetailPage({ fabricId }: { fabricId: string }) {
           <div className="mt-5 max-w-md">
             <div className="mb-2 flex items-baseline justify-between">
               <p className="font-display text-3xl font-semibold tabular-nums text-ink">
-                {meters(left)}
+                {qty(left, fabric.unit)}
                 <span className="ml-2 text-sm font-medium text-stone-500">left</span>
               </p>
-              <p className="text-sm tabular-nums text-stone-500">of {meters(fabric.meters_bought)}</p>
+              <p className="text-sm tabular-nums text-stone-500">of {qty(fabric.meters_bought, fabric.unit)}</p>
             </div>
             <TapeBar left={left} total={Number(fabric.meters_bought)} tone={left <= 0 ? 'empty' : 'ok'} />
           </div>
@@ -124,7 +124,7 @@ export function FabricDetailPage({ fabricId }: { fabricId: string }) {
                 <p className="mt-0.5 text-xs text-stone-500">{e.supplier || 'No supplier'}</p>
                 <Stats
                   items={[
-                    { label: 'Meters', value: meters(e.meters) },
+                    { label: fabric.unit === 'pcs' ? 'Pieces' : 'Meters', value: qty(e.meters, fabric.unit) },
                     { label: 'Rate', value: rupees(e.rate_per_meter) },
                     { label: 'Total', value: rupees(Number(e.meters) * Number(e.rate_per_meter)), strong: true },
                   ]}
@@ -148,7 +148,7 @@ export function FabricDetailPage({ fabricId }: { fabricId: string }) {
                   <Th>Date</Th>
                   <Th>Supplier</Th>
                   <Th>Bought for</Th>
-                  <Th align="right">Meters</Th>
+                  <Th align="right">{fabric.unit === 'pcs' ? 'Pieces' : 'Meters'}</Th>
                   <Th align="right">Rate</Th>
                   <Th align="right">Total</Th>
                 </tr>
@@ -163,7 +163,7 @@ export function FabricDetailPage({ fabricId }: { fabricId: string }) {
                         {e.purpose === 'sample' ? 'Sample' : 'Production'}
                       </Badge>
                     </Td>
-                    <Td align="right">{meters(e.meters)}</Td>
+                    <Td align="right">{qty(e.meters, fabric.unit)}</Td>
                     <Td align="right">{rupees(e.rate_per_meter)}</Td>
                     <Td align="right" className="font-semibold">
                       {rupees(Number(e.meters) * Number(e.rate_per_meter))}
@@ -190,8 +190,8 @@ export function FabricDetailPage({ fabricId }: { fabricId: string }) {
               <p className="mt-0.5 text-xs text-stone-500">{u.design_code || 'No design'}</p>
               <Stats
                 items={[
-                  { label: 'Used', value: `${plain(u.meters_used)} m` },
-                  { label: 'Wastage', value: `${plain(u.wastage_meters)} m` },
+                  { label: 'Used', value: qty(u.meters_used, fabric.unit) },
+                  { label: 'Wastage', value: qty(u.wastage_meters, fabric.unit) },
                 ]}
               />
             </MobileItem>
@@ -236,8 +236,8 @@ export function FabricDetailPage({ fabricId }: { fabricId: string }) {
                         {u.usage_type === 'sample' ? 'Sample' : 'Kurti'}
                       </Badge>
                     </Td>
-                    <Td align="right">{plain(u.meters_used)} m</Td>
-                    <Td align="right">{plain(u.wastage_meters)} m</Td>
+                    <Td align="right">{qty(u.meters_used, fabric.unit)}</Td>
+                    <Td align="right">{qty(u.wastage_meters, fabric.unit)}</Td>
                   </tr>
                 ))}
               </tbody>

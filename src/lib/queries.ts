@@ -48,7 +48,7 @@ export function useStockIn() {
     queryFn: async (): Promise<StockIn[]> => {
       const { data, error } = await supabase
         .from('fabric_stock_in')
-        .select('*, fabric_lots(fabric_name, color)')
+        .select('*, fabric_lots(fabric_name, color, unit)')
         .order('entry_date', { ascending: false })
         .order('created_at', { ascending: false })
       if (error) throw new Error(error.message)
@@ -63,7 +63,7 @@ export function useUsage() {
     queryFn: async (): Promise<FabricUsage[]> => {
       const { data, error } = await supabase
         .from('fabric_usage')
-        .select('*, fabric_lots(fabric_name, color)')
+        .select('*, fabric_lots(fabric_name, color, unit)')
         .order('usage_date', { ascending: false })
         .order('created_at', { ascending: false })
       if (error) throw new Error(error.message)

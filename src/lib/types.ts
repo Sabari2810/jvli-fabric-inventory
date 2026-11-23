@@ -1,3 +1,4 @@
+export type Unit = 'm' | 'pcs'
 export type Purpose = 'sample' | 'production'
 export type UsageType = 'sample' | 'actual'
 
@@ -18,6 +19,8 @@ export interface FabricStock {
   drop_id: string | null
   fabric_type_id: string | null
   width_inches: number | null
+  /** Counted in meters (fabric) or pieces (dupatta and other ready-made items). */
+  unit: Unit
   created_at: string
   purchase_date: string | null
   supplier: string | null
@@ -64,6 +67,7 @@ export interface FabricInput {
   drop_id: string | null
   fabric_type_id: string | null
   width_inches: number | null
+  unit?: Unit
 }
 
 export interface StockIn {
@@ -76,7 +80,7 @@ export interface StockIn {
   purpose: Purpose
   notes: string | null
   created_at: string
-  fabric_lots: { fabric_name: string; color: string | null } | null
+  fabric_lots: { fabric_name: string; color: string | null; unit: Unit } | null
 }
 
 export type NewStockIn = Omit<StockIn, 'id' | 'created_at' | 'fabric_lots'>
@@ -94,6 +98,7 @@ export interface FabricUsage {
   fabric_lots: {
     fabric_name: string
     color: string | null
+    unit: Unit
   } | null
 }
 

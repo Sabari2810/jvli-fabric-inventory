@@ -70,7 +70,8 @@ export function StyleDrawer({
   const typeOptions = (types.data ?? []).map((t) => ({ value: t.id, label: t.name }))
   const fabricOptions = useMemo(
     () =>
-      (stock.data ?? []).map((x) => ({
+      // Style costing is per meter of fabric, so items counted in pieces are not offered here.
+      (stock.data ?? []).filter((x) => x.unit !== 'pcs').map((x) => ({
         value: x.id,
         label: x.fabric_name,
         hint: x.color ?? undefined,

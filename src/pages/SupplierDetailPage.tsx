@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useStockIn, useSuppliers } from '../lib/queries'
-import { meters, rupees, shortDate } from '../lib/format'
+import { qty, qtyMix, rupees, shortDate } from '../lib/format'
 import { Badge, Card, EmptyState, ErrorNote, Loading, MobileItem, MobileList, Stats, Td, Th, linkButton } from '../components/ui'
 
 export function SupplierDetailPage({ supplierId }: { supplierId: string }) {
@@ -16,14 +16,22 @@ export function SupplierDetailPage({ supplierId }: { supplierId: string }) {
 
   const totals = useMemo(() => {
     let m = 0
+    let p = 0
     let spent = 0
+    let spentM = 0
     const fabrics = new Set<string>()
     for (const e of entries) {
-      m += Number(e.meters)
-      spent += Number(e.meters) * Number(e.rate_per_meter)
+      const cost = Number(e.meters) * Number(e.rate_per_meter)
+      if (e.fabric_lots?.unit === 'pcs') p += Number(e.meters)
+      else {
+        m += Number(e.meters)
+        spentM += cost
+      }
+      spent += cost
       fabrics.add(e.lot_id)
     }
-    return { meters: m, spent, fabrics: fabrics.size, avg: m > 0 ? spent / m : 0 }
+    // Average rate is per meter, so it only covers the items bought in meters.
+    return { meters: m, pieces: p, spent, fabrics: fabrics.size, avg: m > 0 ? spentM / m : 0 }
   }, [entries])
 
   if (suppliers.isLoading || stockIn.isLoading) return <Loading />
@@ -48,9 +56,9 @@ export function SupplierDetailPage({ supplierId }: { supplierId: string }) {
   const figures = [
     { label: 'Entries', value: String(entries.length) },
     { label: 'Fabrics', value: String(totals.fabrics) },
-    { label: 'Meters bought', value: meters(totals.meters) },
+    { label: 'Bought', value: qtyMix(totals.meters, totals.pieces) },
     { label: 'Total spent', value: rupees(totals.spent) },
-    { label: 'Average rate', value: rupees(totals.avg) },
+    { label: 'Average rate per meter', value: rupees(totals.avg) },
   ]
 
   return (
@@ -103,7 +111,7 @@ export function SupplierDetailPage({ supplierId }: { supplierId: string }) {
               </div>
               <Stats
                 items={[
-                  { label: 'Meters', value: meters(e.meters) },
+                  { label: 'Quantity', value: qty(e.meters, e.fabric_lots?.unit) },
                   { label: 'Rate', value: rupees(e.rate_per_meter) },
                   { label: 'Total', value: rupees(Number(e.meters) * Number(e.rate_per_meter)), strong: true },
                 ]}
@@ -124,7 +132,7 @@ export function SupplierDetailPage({ supplierId }: { supplierId: string }) {
                   <Th>Date</Th>
                   <Th>Fabric</Th>
                   <Th>Bought for</Th>
-                  <Th align="right">Meters</Th>
+                  <Th align="right">Quantity</Th>
                   <Th align="right">Rate</Th>
                   <Th align="right">Total</Th>
                 </tr>
@@ -148,7 +156,7 @@ export function SupplierDetailPage({ supplierId }: { supplierId: string }) {
                         {e.purpose === 'sample' ? 'Sample' : 'Production'}
                       </Badge>
                     </Td>
-                    <Td align="right">{meters(e.meters)}</Td>
+                    <Td align="right">{qty(e.meters, e.fabric_lots?.unit)}</Td>
                     <Td align="right">{rupees(e.rate_per_meter)}</Td>
                     <Td align="right" className="font-semibold">
                       {rupees(Number(e.meters) * Number(e.rate_per_meter))}
