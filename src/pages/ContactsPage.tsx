@@ -186,7 +186,8 @@ export function ContactsPage() {
         .filter(Boolean)
         .join(' ')
         .toLowerCase()
-      return hay.includes(needle.replace(/\s+/g, ' ')) || (last10(needle) !== '' && hay.replace(/\D/g, '').includes(allDigits(needle)))
+      const digits = allDigits(needle)
+      return hay.includes(needle.replace(/\s+/g, ' ')) || (digits.length >= 3 && hay.replace(/\D/g, '').includes(digits))
     })
   }, [all, q, cat, status, source])
 
