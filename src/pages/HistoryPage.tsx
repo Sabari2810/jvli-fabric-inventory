@@ -73,6 +73,27 @@ const TABLES: Record<string, TableInfo> = {
       notes: ['Notes', 'text'],
     },
   },
+  contacts: {
+    noun: 'Contact',
+    fields: {
+      name: ['Name', 'text'],
+      contact_person: ['Contact person', 'text'],
+      phone: ['Phone', 'text'],
+      alt_phone: ['Other phone', 'text'],
+      email: ['Email', 'text'],
+      location: ['Location', 'text'],
+      address: ['Address', 'text'],
+      website: ['Website', 'text'],
+      categories: ['Supplies', 'text'],
+      products: ['Products', 'text'],
+      min_order: ['Min order', 'text'],
+      source: ['Source', 'text'],
+      source_url: ['Listing link', 'text'],
+      status: ['Status', 'text'],
+      follow_up_date: ['Follow up', 'date'],
+      notes: ['Notes', 'text'],
+    },
+  },
   drop_styles: {
     noun: 'Style',
     fields: {
@@ -100,6 +121,7 @@ const AREAS: { value: string; label: string; tables: string[] | null }[] = [
   { value: 'drops', label: 'Drops and styles', tables: ['drops', 'drop_styles'] },
   { value: 'patterns', label: 'Patterns', tables: ['patterns'] },
   { value: 'other', label: 'Suppliers and fabric types', tables: ['suppliers', 'fabric_types'] },
+  { value: 'contacts', label: 'Contacts', tables: ['contacts'] },
 ]
 
 const ACTIONS: Record<AuditEntry['action'], { verb: string; tone: 'green' | 'amber' | 'red' }> = {
@@ -110,6 +132,7 @@ const ACTIONS: Record<AuditEntry['action'], { verb: string; tone: 'green' | 'amb
 
 function show(value: unknown, kind: Kind, unit: AuditEntry['unit']): string {
   if (value === null || value === undefined || value === '') return 'empty'
+  if (Array.isArray(value)) return value.length ? value.join(', ') : 'empty'
   switch (kind) {
     case 'qty':
       return qty(value as number, unit)
@@ -127,6 +150,7 @@ function show(value: unknown, kind: Kind, unit: AuditEntry['unit']): string {
 }
 
 function sameValue(a: unknown, b: unknown): boolean {
+  if (Array.isArray(a) || Array.isArray(b)) return JSON.stringify(a ?? []) === JSON.stringify(b ?? [])
   if ((a ?? null) === (b ?? null)) return true
   if (a === '' && b == null) return true
   if (b === '' && a == null) return true
@@ -158,7 +182,7 @@ function lines(e: AuditEntry): Line[] {
   const row = (e.action === 'insert' ? e.new_data : e.old_data) ?? {}
   for (const [key, [label, kind]] of Object.entries(info.fields)) {
     const v = row[key]
-    if (v === null || v === undefined || v === '') continue
+    if (v === null || v === undefined || v === '' || (Array.isArray(v) && v.length === 0)) continue
     if (key === 'unit' && v === 'm') continue
     out.push({ label, value: show(v, kind, e.unit) })
   }

@@ -148,3 +148,28 @@ export interface DropStyle {
 }
 
 export type DropStyleInput = Omit<DropStyle, 'id' | 'created_at'>
+
+export type ContactStatus = 'new' | 'contacted' | 'interested' | 'sample' | 'onboarded' | 'not_fit'
+
+export interface Contact {
+  id: string
+  name: string
+  contact_person: string | null
+  phone: string | null
+  alt_phone: string | null
+  email: string | null
+  location: string | null
+  address: string | null
+  website: string | null
+  categories: string[]
+  products: string | null
+  min_order: string | null
+  source: string | null
+  source_url: string | null
+  status: ContactStatus
+  follow_up_date: string | null
+  notes: string | null
+  created_at: string
+}
+
+export type ContactInput = Omit<Contact, 'id' | 'created_at'>

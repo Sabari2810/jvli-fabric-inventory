@@ -15,6 +15,8 @@ import type {
   NewStockIn,
   NewUsage,
   StockIn,
+  Contact,
+  ContactInput,
 } from './types'
 
 const KEYS = {
@@ -26,6 +28,7 @@ const KEYS = {
   fabricTypes: ['fabric-types'] as const,
   patterns: ['patterns'] as const,
   styles: ['drop-styles'] as const,
+  contacts: ['contacts'] as const,
 }
 
 export function useStock() {
@@ -527,5 +530,40 @@ export function useHistory(opts: { tables: string[] | null; action: string | nul
       if (error) throw new Error(error.message)
       return (data ?? []) as AuditEntry[]
     },
+  })
+}
+
+export function useContacts() {
+  return useQuery({
+    queryKey: KEYS.contacts,
+    queryFn: async (): Promise<Contact[]> => {
+      const { data, error } = await supabase.from('contacts').select('*').order('created_at', { ascending: false })
+      if (error) throw new Error(error.message)
+      return (data ?? []) as Contact[]
+    },
+  })
+}
+
+export function useSaveContact() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, input }: { id?: string; input: ContactInput }) => {
+      const { error } = id
+        ? await supabase.from('contacts').update(input).eq('id', id)
+        : await supabase.from('contacts').insert(input)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.contacts }),
+  })
+}
+
+export function useDeleteContact() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('contacts').delete().eq('id', id)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.contacts }),
   })
 }

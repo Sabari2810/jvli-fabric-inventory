@@ -13,6 +13,7 @@ import { SuppliersPage } from './pages/SuppliersPage'
 import { StockInPage } from './pages/StockInPage'
 import { UsagePage } from './pages/UsagePage'
 import { HistoryPage } from './pages/HistoryPage'
+import { ContactsPage } from './pages/ContactsPage'
 
 const rootRoute = createRootRoute({ component: () => <Outlet /> })
 
@@ -109,6 +110,12 @@ const patternsRoute = createRoute({
   component: PatternsPage,
 })
 
+const contactsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/contacts',
+  component: ContactsPage,
+})
+
 const historyRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/history',
@@ -131,7 +138,7 @@ function UsageRouteComponent() {
 
 const routeTree = rootRoute.addChildren([
   loginRoute,
-  appRoute.addChildren([stockRoute, fabricRoute, dropsRoute, dropRoute, suppliersRoute, supplierRoute, fabricTypesRoute, fabricTypeRoute, patternsRoute, stockInRoute, usageRoute, historyRoute]),
+  appRoute.addChildren([stockRoute, fabricRoute, dropsRoute, dropRoute, suppliersRoute, supplierRoute, fabricTypesRoute, fabricTypeRoute, patternsRoute, stockInRoute, usageRoute, contactsRoute, historyRoute]),
 ])
 
 export const router = createRouter({ routeTree })
