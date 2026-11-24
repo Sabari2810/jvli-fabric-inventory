@@ -96,7 +96,6 @@ function Actions({ c }: { c: Contact }) {
 
 interface FormState {
   name: string
-  contact_person: string
   phone: string
   alt_phone: string
   email: string
@@ -115,7 +114,6 @@ interface FormState {
 
 const EMPTY: FormState = {
   name: '',
-  contact_person: '',
   phone: '',
   alt_phone: '',
   email: '',
@@ -136,7 +134,6 @@ function toForm(c: Contact | null): FormState {
   if (!c) return EMPTY
   return {
     name: c.name,
-    contact_person: c.contact_person ?? '',
     phone: c.phone ?? '',
     alt_phone: c.alt_phone ?? '',
     email: c.email ?? '',
@@ -182,7 +179,7 @@ export function ContactsPage() {
       if (status && c.status !== status) return false
       if (source && (c.source ?? '') !== source) return false
       if (!needle) return true
-      const hay = [c.name, c.contact_person, c.phone, c.alt_phone, c.email, c.location, c.products, c.notes, c.address]
+      const hay = [c.name, c.phone, c.alt_phone, c.email, c.location, c.products, c.notes, c.address]
         .filter(Boolean)
         .join(' ')
         .toLowerCase()
@@ -227,7 +224,7 @@ export function ContactsPage() {
     if (!f.name.trim()) return setError('Enter the business or contact name.')
     const input: ContactInput = {
       name: f.name.trim(),
-      contact_person: blank(f.contact_person),
+      contact_person: editing?.contact_person ?? null,
       phone: blank(f.phone),
       alt_phone: blank(f.alt_phone),
       email: blank(f.email)?.toLowerCase() ?? null,
@@ -340,7 +337,7 @@ export function ContactsPage() {
                   <div className="min-w-0">
                     <p className="font-display text-lg font-semibold leading-snug text-ink">{c.name}</p>
                     <p className="mt-0.5 text-xs text-stone-500">
-                      {[c.contact_person, c.location].filter(Boolean).join(' · ') || 'No details yet'}
+                      {c.location || 'No location yet'}
                     </p>
                   </div>
                   <Badge tone={st.tone}>{st.label}</Badge>
@@ -421,7 +418,6 @@ export function ContactsPage() {
                     <tr key={c.id} className="align-top transition hover:bg-stone-50/70">
                       <Td>
                         <p className="font-semibold text-ink">{c.name}</p>
-                        {c.contact_person ? <p className="text-xs text-stone-500">{c.contact_person}</p> : null}
                         {c.products ? <p className="mt-1 max-w-xs text-xs text-stone-500">{c.products}</p> : null}
                       </Td>
                       <Td className="whitespace-nowrap text-stone-600">
@@ -499,14 +495,6 @@ export function ContactsPage() {
               className={inputClass}
               value={f.name}
               onChange={(e) => set('name', e.target.value)}
-            />
-          </Field>
-          <Field label="Contact person">
-            <input
-              placeholder="Who you speak to"
-              className={inputClass}
-              value={f.contact_person}
-              onChange={(e) => set('contact_person', e.target.value)}
             />
           </Field>
           <div className="grid grid-cols-2 gap-4">
