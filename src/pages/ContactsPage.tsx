@@ -67,10 +67,6 @@ function waLink(phone: string): string {
   return `https://wa.me/${d}`
 }
 
-function host(url: string): string {
-  return url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')
-}
-
 const smallButton = `${subtleButton} !px-3 !py-1.5`
 
 function Followup({ c }: { c: Contact }) {
@@ -80,14 +76,14 @@ function Followup({ c }: { c: Contact }) {
 }
 
 function Actions({ c }: { c: Contact }) {
-  if (!c.phone && !c.alt_phone) return null
-  const number = c.phone || c.alt_phone || ''
+  if (!c.phone) return null
+  const number = c.phone
   return (
     <>
       <a href={telLink(number)} className={smallButton}>
         Call
       </a>
-      <a href={waLink(c.alt_phone || number)} target="_blank" rel="noreferrer" className={smallButton}>
+      <a href={waLink(number)} target="_blank" rel="noreferrer" className={smallButton}>
         WhatsApp
       </a>
     </>
@@ -97,7 +93,6 @@ function Actions({ c }: { c: Contact }) {
 interface FormState {
   name: string
   phone: string
-  alt_phone: string
   email: string
   location: string
   address: string
@@ -106,7 +101,6 @@ interface FormState {
   products: string
   min_order: string
   source: string
-  source_url: string
   status: ContactStatus
   follow_up_date: string
   notes: string
@@ -115,7 +109,6 @@ interface FormState {
 const EMPTY: FormState = {
   name: '',
   phone: '',
-  alt_phone: '',
   email: '',
   location: '',
   address: '',
@@ -124,7 +117,6 @@ const EMPTY: FormState = {
   products: '',
   min_order: '',
   source: '',
-  source_url: '',
   status: 'new',
   follow_up_date: '',
   notes: '',
@@ -135,7 +127,6 @@ function toForm(c: Contact | null): FormState {
   return {
     name: c.name,
     phone: c.phone ?? '',
-    alt_phone: c.alt_phone ?? '',
     email: c.email ?? '',
     location: c.location ?? '',
     address: c.address ?? '',
@@ -144,7 +135,6 @@ function toForm(c: Contact | null): FormState {
     products: c.products ?? '',
     min_order: c.min_order ?? '',
     source: c.source ?? '',
-    source_url: c.source_url ?? '',
     status: c.status,
     follow_up_date: c.follow_up_date ?? '',
     notes: c.notes ?? '',
@@ -179,7 +169,7 @@ export function ContactsPage() {
       if (status && c.status !== status) return false
       if (source && (c.source ?? '') !== source) return false
       if (!needle) return true
-      const hay = [c.name, c.phone, c.alt_phone, c.email, c.location, c.products, c.notes, c.address]
+      const hay = [c.name, c.phone, c.email, c.location, c.products, c.notes, c.address]
         .filter(Boolean)
         .join(' ')
         .toLowerCase()
@@ -190,16 +180,16 @@ export function ContactsPage() {
 
   // Contacts come in from IndiaMART and Google, so the same business often turns up twice.
   const duplicate = useMemo(() => {
-    const mine = [last10(f.phone), last10(f.alt_phone)].filter(Boolean)
+    const mine = [last10(f.phone)].filter(Boolean)
     if (mine.length === 0) return null
     const hit = all.find(
-      (c) => c.id !== editing?.id && [last10(c.phone), last10(c.alt_phone)].some((n) => n && mine.includes(n)),
+      (c) => c.id !== editing?.id && [last10(c.phone)].some((n) => n && mine.includes(n)),
     )
     if (hit) return `This number is already saved for ${hit.name}.`
     const sup = (suppliers.data ?? []).find((s) => mine.includes(last10(s.phone)))
     if (sup) return `This number belongs to your supplier ${sup.name}.`
     return null
-  }, [f.phone, f.alt_phone, all, suppliers.data, editing])
+  }, [f.phone, all, suppliers.data, editing])
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setF((prev) => ({ ...prev, [key]: value }))
@@ -226,7 +216,7 @@ export function ContactsPage() {
       name: f.name.trim(),
       contact_person: editing?.contact_person ?? null,
       phone: blank(f.phone),
-      alt_phone: blank(f.alt_phone),
+      alt_phone: editing?.alt_phone ?? null,
       email: blank(f.email)?.toLowerCase() ?? null,
       location: blank(f.location),
       address: blank(f.address),
@@ -235,7 +225,7 @@ export function ContactsPage() {
       products: blank(f.products),
       min_order: blank(f.min_order),
       source: blank(f.source),
-      source_url: normalizeUrl(f.source_url),
+      source_url: editing?.source_url ?? null,
       status: f.status,
       follow_up_date: f.follow_up_date || null,
       notes: blank(f.notes),
@@ -342,9 +332,9 @@ export function ContactsPage() {
                   </div>
                   <Badge tone={st.tone}>{st.label}</Badge>
                 </div>
-                {c.phone || c.alt_phone ? (
+                {c.phone ? (
                   <p className="mt-2 text-sm font-medium tabular-nums text-ink">
-                    {[c.phone, c.alt_phone].filter(Boolean).join('  ·  ')}
+                    {c.phone}
                   </p>
                 ) : null}
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -422,14 +412,13 @@ export function ContactsPage() {
                       </Td>
                       <Td className="whitespace-nowrap text-stone-600">
                         <p className="tabular-nums">{c.phone || '-'}</p>
-                        {c.alt_phone ? <p className="text-xs tabular-nums text-stone-500">{c.alt_phone}</p> : null}
-                        {c.phone || c.alt_phone ? (
+                        {c.phone ? (
                           <p className="mt-1 flex gap-3">
-                            <a href={telLink(c.phone || c.alt_phone || '')} className={`${linkButton} text-xs`}>
+                            <a href={telLink(c.phone)} className={`${linkButton} text-xs`}>
                               Call
                             </a>
                             <a
-                              href={waLink(c.alt_phone || c.phone || '')}
+                              href={waLink(c.phone)}
                               target="_blank"
                               rel="noreferrer"
                               className={`${linkButton} text-xs`}
@@ -454,13 +443,7 @@ export function ContactsPage() {
                         </div>
                       </Td>
                       <Td className="text-stone-600">
-                        {c.source_url ? (
-                          <a href={c.source_url} target="_blank" rel="noreferrer" className={linkButton}>
-                            {c.source || host(c.source_url)}
-                          </a>
-                        ) : (
-                          c.source || '-'
-                        )}
+                        {c.source || '-'}
                       </Td>
                       <Td>
                         <Badge tone={st.tone}>{st.label}</Badge>
@@ -497,26 +480,15 @@ export function ContactsPage() {
               onChange={(e) => set('name', e.target.value)}
             />
           </Field>
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Phone">
-              <input
-                type="tel"
-                inputMode="tel"
-                className={inputClass}
-                value={f.phone}
-                onChange={(e) => set('phone', e.target.value)}
-              />
-            </Field>
-            <Field label="WhatsApp or other">
-              <input
-                type="tel"
-                inputMode="tel"
-                className={inputClass}
-                value={f.alt_phone}
-                onChange={(e) => set('alt_phone', e.target.value)}
-              />
-            </Field>
-          </div>
+          <Field label="Phone">
+            <input
+              type="tel"
+              inputMode="tel"
+              className={inputClass}
+              value={f.phone}
+              onChange={(e) => set('phone', e.target.value)}
+            />
+          </Field>
           {duplicate ? (
             <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
               {duplicate} You can still save it.
@@ -625,17 +597,6 @@ export function ContactsPage() {
               </select>
             </Field>
           </div>
-          <Field label="Listing link">
-            <input
-              type="text"
-              inputMode="url"
-              autoCapitalize="none"
-              placeholder="Link to their IndiaMART or Google listing"
-              className={inputClass}
-              value={f.source_url}
-              onChange={(e) => set('source_url', e.target.value)}
-            />
-          </Field>
           <Field label="Follow up on">
             <input
               type="date"
