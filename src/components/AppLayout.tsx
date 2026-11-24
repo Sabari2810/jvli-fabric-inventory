@@ -16,7 +16,7 @@ const items = [
   { to: '/history', label: 'History', icon: 'history', exact: false },
 ] as const
 
-// On phones the bottom bar keeps the four everyday pages and the rest live in a Menu.
+// On phones the bottom bar keeps the four everyday pages; the rest open from the menu button at the top.
 const mainTabs = items.slice(0, 4)
 const moreTabs = items.slice(4)
 
@@ -43,7 +43,6 @@ export function AppLayout() {
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [menuOpen])
-  const inMenu = moreTabs.some((i) => pathname.startsWith(i.to))
 
   if (loading) {
     return (
@@ -93,75 +92,110 @@ export function AppLayout() {
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between bg-maroon-900 px-4 py-3 lg:hidden">
-        <p className="font-display text-xl font-bold tracking-tight text-white">JVLI</p>
+      <header className="sticky top-0 z-30 flex items-center justify-between bg-maroon-900 px-2 py-2 lg:hidden">
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            aria-label="Open menu"
+            aria-expanded={menuOpen}
+            aria-controls="side-menu"
+            onClick={() => setMenuOpen(true)}
+            className="rounded-lg p-2.5 text-white transition active:bg-white/10"
+          >
+            <Icon name="menu" className="h-6 w-6" />
+          </button>
+          <p className="font-display text-xl font-bold tracking-tight text-white">JVLI</p>
+        </div>
         <button
           type="button"
           onClick={() => void signOut()}
-          className="flex items-center gap-2 text-sm text-maroon-100/90"
+          className="flex items-center gap-2 pr-2 text-sm text-maroon-100/90"
         >
           {username}
           <Icon name="logout" className="h-4 w-4" />
         </button>
       </header>
 
+      {/* Mobile menu drawer: the pages that are not in the bottom bar */}
+      {menuOpen ? (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <button
+            type="button"
+            aria-label="Close menu"
+            onClick={() => setMenuOpen(false)}
+            className="absolute inset-0 animate-fade-in bg-ink/40"
+          />
+          <aside
+            id="side-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu"
+            className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-maroon-900 px-4 py-5 shadow-2xl"
+          >
+            <div className="flex items-center justify-between px-3">
+              <div>
+                <p className="font-display text-2xl font-bold tracking-tight text-white">JVLI</p>
+                <p className="text-sm text-maroon-200/80">Fabric inventory</p>
+              </div>
+              <button
+                type="button"
+                aria-label="Close menu"
+                onClick={() => setMenuOpen(false)}
+                className="rounded-lg p-2 text-maroon-100/80 transition active:bg-white/10"
+              >
+                <Icon name="close" />
+              </button>
+            </div>
+            <nav className="mt-8 flex flex-1 flex-col gap-1" aria-label="More pages">
+              {moreTabs.map((i) => (
+                <Link
+                  key={i.to}
+                  to={i.to}
+                  activeOptions={{ exact: i.exact }}
+                  className={sideLink}
+                  activeProps={{ className: sideActive }}
+                >
+                  <Icon name={i.icon} />
+                  {i.label}
+                </Link>
+              ))}
+            </nav>
+            <div className="border-t border-white/15 px-3 pt-4">
+              <p className="truncate text-sm font-medium text-white">{username}</p>
+              <button
+                type="button"
+                onClick={() => void signOut()}
+                className="mt-2 flex items-center gap-2 text-sm text-maroon-200/80 transition hover:text-white"
+              >
+                <Icon name="logout" className="h-4 w-4" />
+                Sign out
+              </button>
+            </div>
+          </aside>
+        </div>
+      ) : null}
+
       <main className="mx-auto max-w-6xl px-4 pb-28 pt-8 sm:px-8 lg:pb-12 lg:pt-12">
         <Outlet />
       </main>
 
-      {/* Mobile bottom tabs: four everyday pages and a Menu for the rest */}
-      {menuOpen ? (
-        <button
-          type="button"
-          aria-label="Close menu"
-          onClick={() => setMenuOpen(false)}
-          className="fixed inset-0 z-20 bg-ink/30 lg:hidden"
-        />
-      ) : null}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-white lg:hidden" aria-label="Main">
-        {menuOpen ? (
-          <div
-            id="more-menu"
-            className="absolute inset-x-3 bottom-full mb-2 overflow-hidden rounded-2xl border border-stone-200 bg-white p-1.5 shadow-xl"
+      {/* Mobile bottom tabs: the four everyday pages */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-30 flex border-t border-stone-200 bg-white lg:hidden"
+        aria-label="Main"
+      >
+        {mainTabs.map((i) => (
+          <Link
+            key={i.to}
+            to={i.to}
+            activeOptions={{ exact: i.exact }}
+            className={tabLink}
+            activeProps={{ className: tabActive }}
           >
-            {moreTabs.map((i) => (
-              <Link
-                key={i.to}
-                to={i.to}
-                activeOptions={{ exact: i.exact }}
-                className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-[15px] font-medium text-stone-700 transition active:bg-stone-100"
-                activeProps={{ className: 'bg-maroon-50 !text-maroon-900' }}
-              >
-                <Icon name={i.icon} />
-                {i.label}
-              </Link>
-            ))}
-          </div>
-        ) : null}
-        <div className="flex">
-          {mainTabs.map((i) => (
-            <Link
-              key={i.to}
-              to={i.to}
-              activeOptions={{ exact: i.exact }}
-              className={tabLink}
-              activeProps={{ className: tabActive }}
-            >
-              <Icon name={i.icon} />
-              {i.label}
-            </Link>
-          ))}
-          <button
-            type="button"
-            aria-expanded={menuOpen}
-            aria-controls="more-menu"
-            onClick={() => setMenuOpen((v) => !v)}
-            className={`${tabLink} ${menuOpen || inMenu ? tabActive : ''}`}
-          >
-            <Icon name="more" />
-            Menu
-          </button>
-        </div>
+            <Icon name={i.icon} />
+            {i.label}
+          </Link>
+        ))}
       </nav>
     </div>
   )
